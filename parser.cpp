@@ -1,8 +1,8 @@
-﻿#include "iostream"
+﻿#include "parser.h"
+#include "iostream"
 #include "string"
-#include "parser.h"
 using namespace std;
-static void nextToken() { int x = 1; };
+
 enum TokenType {
   CONDITION,
   INTEGER,
@@ -23,12 +23,11 @@ enum TokenType {
   CLOSE_BRACE,
   OPEN_BRACKET,
   CLOSE_BRACKET,
+  OPEN_PARTH,
+  CLOSE_PARTH,
   CONSTANT,
   QUOTATION_MARK,
   INCLUSION,
-  SINGLE_LINE_COMMENT,
-  MULTI_LINE_COMMENT_START,
-  MULTI_LINE_COMMENT_END,
   STRUCT,
   BREAK,
   IDENTIFIER,
@@ -36,21 +35,6 @@ enum TokenType {
   COLON,
   SEMICOLON
 };
-
-bool isDataType(TokenType token) {
-  switch (token) {
-    case INTEGER:
-    case SINTEGER:
-    case CHARACTER:
-    case STRING:
-    case FLOAT:
-    case SFLOAT:
-    case VOID:
-      return true;
-    default:
-      return false;
-  }
-}
 
 struct Token {
   TokenType type;
@@ -61,113 +45,400 @@ struct Token {
   }
 };
 
-// Recursive descent parser w/ modifed right-recursive grammar in md file.
-// Assumes tokens are stored in current_token, nextToken() advances the reading
-// head for the token stream.
-
 unsigned int line_count = 0, error_count = 0;
 Token current_token = Token(INCLUSION, "include");
+static void nextToken() { int x = 1; };
 
-void parseIncludes() {
-  // Useless function.
-  // From project description an include directive is processed during scanning
-  // and the content of the file will be dumbed in the token stream.
-}
-
-/*8. `params → param-list | NOReturn | ε`
-9. `param-list → param p_list`
-10. `p_list -> , param p_list | e`
-11. `param → type-specifier ID`*/
-
-void parseParam() {
-    if (isDataType(current_token.type)) {
-        nextToken();
-    }
-    if (current_token.type == IDENTIFIER) {
-        nextToken();
-        return;
-    }
-    else {
-        throwError();
-    }
-}
-
-void parsePList() {
-    if (current_token.type == CLOSE_BRACKET) {
-        return;
-    } else if (current_token.type == COMMA) {
-        nextToken();
-        parseParam();
-        parsePList();
-        return;
-    }
-    else {
-        throwError();
-    }
-}
-
-void parseParamList() {
-    parseParam();
-    parsePList();
-}
-
-void parseParams() { 
-    nextToken();
-    if (isDataType(current_token.type))
-    {
-        parseParamList();
-    }
-    else if (current_token.type == VOID || current_token.type == CLOSE_BRACE) {
-        return;
-    }
-    else {
-        throwError();
-    }
-}
-
-void parseCompoundStmt() {
-};
-// 7. `fun-declaration → type-specifier ID ( params ) compound-stmt | comment
-// type-specifier ID`
-void parseFunDec() {
-  if (current_token.type == OPEN_BRACE) {
-    parseParams();
-    if (current_token.type == OPEN_BRACKET) {
-      parseCompoundStmt();
-    } 
+bool isDataType(TokenType token) {
+  switch (token) {
+  case INTEGER:
+  case SINTEGER:
+  case CHARACTER:
+  case STRING:
+  case FLOAT:
+  case SFLOAT:
+  case VOID:
+    return true;
+  default:
+    return false;
   }
 }
-// 2. `declaration-list → declaration d_list`
-// 3. `d_list->declaration d_list | e`
-// 4. declaration → var - declaration |fun - declaration
-void parseDeclarationList() {//need to figure out how to handle the recursive part of recursive descent lol
+
+void throwError() {
+  error_count++;
+  cout << "Error at line " << line_count << ": Unexpected token "
+       << current_token.value << endl;
 }
+
+bool isStartOfStatement(TokenType type) {
+  return type == SEMICOLON || type == IDENTIFIER || type == CONSTANT ||
+         type == OPEN_PARTH || type == OPEN_BRACE || type == CONDITION ||
+         type == LOOP || type == RETURN || type == BREAK;
+}
+
+// 1. program → declaration-list | comment | include_command
+int parseProgram() {
+  if (current_token.value == "CLEAR") {
+    parseDeclarations();
+    if (error_count == 0) {
+      cout << "Parsing completed successfully." << endl;
+      return 0;
+    } else {
+      cout << "Parsing completed with " << error_count << " errors." << endl;
+      return 1;
+    }
+  } else {
+    cout << "Errors encountered in scanning. Could not parse." << endl;
+    return 1;
+  }
+}
+
+// 2. declaration-list → declaration d_list
+void parseDeclarations() { parseDeclarationList(); }
+
+// 3. d_list -> declaration d_list | ε
+void parseDeclarationList() {
+  parseDeclaration();
+  if (isDataType(current_token.type)) {
+    parseDeclarationList();
+  }
+}
+
+// 4. declaration → var-declaration | fun-declaration
 void parseDeclaration() {
   if (isDataType(current_token.type)) {
     nextToken();
     if (current_token.type == IDENTIFIER) {
       nextToken();
-      if (current_token.type == OPEN_BRACE) {
+      if (current_token.type == OPEN_PARTH) {
         parseFunDec();
       } else {
         parseVarDec();
       }
+    } else {
+      throwError();
+    }
+  } else {
+    throwError();
+  }
+}
+
+// 5. var-declaration → type-specifier ID ;
+void parseVarDec() {
+  if (isDataType(current_token.type)) {
+    nextToken();
+    if (current_token.type == IDENTIFIER) {
+      nextToken();
+      if (current_token.type == SEMICOLON) {
+        nextToken();
+        return;
+      } else if (current_token.type == COMMA) {
+        nextToken();
+        parseVarDec();
+        return;
+      } else {
+        throwError();
+      }
+    } else {
+      throwError();
+    }
+  } else {
+    throwError();
+  }
+}
+
+// 6. type-specifier → Imw | SIMw | Chj | Series | IMwf | SIMwf | NOReturn
+void parseTypeSpecifier() {}
+
+// 7. fun-declaration → type-specifier ID ( params ) compound-stmt | comment
+// type-specifier ID
+void parseFunDec() {
+  if (current_token.type == OPEN_PARTH) {
+    parseParams();
+    if (current_token.type == CLOSE_PARTH) {
+      nextToken();
+      if (current_token.type == OPEN_BRACE) {
+        parseCompoundStmt();
+      } else {
+        throwError();
+      }
+    } else {
+      throwError();
+    }
+  } else {
+    throwError();
+  }
+}
+
+// 8. params → param-list | NOReturn | ε
+void parseParams() {
+  nextToken();
+  if (isDataType(current_token.type)) {
+    parseParamList();
+  } else if (current_token.type == VOID || current_token.type == CLOSE_PARTH) {
+    nextToken();
+    return;
+  } else {
+    throwError();
+  }
+}
+
+// 9. param-list → param p_list
+void parseParamList() {
+  parseParam();
+  parsePList();
+}
+
+// 10. p_list -> , param p_list | ε
+void parsePList() {
+  if (current_token.type == CLOSE_PARTH) {
+    return;
+  } else if (current_token.type == COMMA) {
+    nextToken();
+    parseParam();
+    parsePList();
+    return;
+  } else {
+    throwError();
+  }
+}
+
+// 11. param → type-specifier ID
+void parseParam() {
+  if (isDataType(current_token.type)) {
+    nextToken();
+  }
+  if (current_token.type == IDENTIFIER) {
+    nextToken();
+    return;
+  } else {
+    throwError();
+  }
+}
+
+// 12. compound-stmt → { comment local-declarations statement-list } | {
+// local-declarations statement-list }
+void parseCompoundStmt() {
+  if (current_token.type == OPEN_BRACE) {
+    nextToken();
+    parseLocalDecs();
+    parseStmtList();
+    if (current_token.type == CLOSE_BRACE) {
+      nextToken();
+    } else {
+      throwError();
+    }
+  } else {
+    throwError();
+  }
+}
+
+// 13. local-declarations → var-declaration local-declarations | ε
+void parseLocalDecs() {
+  if (isDataType(current_token.type)) {
+    parseVarDec();
+    parseLocalDecs();
+  }
+}
+
+// 14. statement-list → statement  statement-list| ε
+void parseStmtList() {
+  if (isStartOfStatement(current_token.type)) {
+    parseStatement();
+    parseStmtList();
+  }
+}
+
+// 15. statement → expression-stmt | compound-stmt | selection-stmt |
+// iteration-stmt | jump-stmt
+void parseStatement() {
+  switch (current_token.type) {
+  case IDENTIFIER:
+  case CONSTANT:
+  case OPEN_PARTH:
+    parseExpressionStmt();
+    break;
+  case OPEN_BRACE:
+    parseCompoundStmt();
+    break;
+  case CONDITION:
+    parseSelectionStmt();
+    break;
+  case LOOP:
+    parseIterationStmt();
+    break;
+  case RETURN:
+  case BREAK:
+    parseJumpStmt();
+    break;
+  default:
+    throwError();
+    while (current_token.type != SEMICOLON &&
+           current_token.type != CLOSE_BRACE) {
+      nextToken();
     }
   }
 }
 
-int parseProgram() {
-  // Entry point
-  //{program → declaration-list | comment | include_command} does not make
-  // sense??.
-  // Will use {program → include_command program_unit}`
-  // {program_unit -> declaration_list program_unit | comment program_unit}
-  // Comments are ignored by the parser in general and includes are just scanned
-  // into the stream so the working rule is just
-  // {program_unit -> declaration_list program_unit | e}
-  if (current_token.value == "CLEAR") {
-    parseDeclarations();
+// 16. expression-stmt → expression ; | ;
+void parseExpressionStmt() {
+  parseExpression();
+  if (current_token.type == SEMICOLON) {
+    nextToken();
   } else {
-    cout << "Errors encountered in scanning. Could not parse." << endl;
+    throwError();
   }
 }
+
+// 17. selection-stmt → IfTrue ( expression ) statement | IfTrue ( expression )
+// statement Otherwise statement
+void parseSelectionStmt() {
+  if (current_token.type == CONDITION) {
+    nextToken();
+    if (current_token.type == OPEN_PARTH) {
+      nextToken();
+      parseExpression();
+      if (current_token.type == CLOSE_PARTH) {
+        nextToken();
+        parseStatement();
+        if (current_token.value == "else") {
+          nextToken();
+          parseStatement();
+        }
+      } else {
+        throwError();
+      }
+    } else {
+      throwError();
+    }
+  }
+}
+
+// 18. iteration-stmt → RepeatWhen ( expression ) statement | Reiterate (
+// expression ; expression ; expression ) statement
+void parseIterationStmt() {
+  if (current_token.type == LOOP) {
+    nextToken();
+    if (current_token.type == OPEN_PARTH) {
+      nextToken();
+      parseExpression();
+      if (current_token.type == CLOSE_PARTH) {
+        nextToken();
+        parseStatement();
+      } else {
+        throwError();
+      }
+    } else {
+      throwError();
+    }
+  }
+}
+
+// 19. jump-stmt → Turnback expression ; | Stop ;
+void parseJumpStmt() {
+  if (current_token.type == RETURN) {
+    nextToken();
+    if (current_token.type != SEMICOLON) {
+      parseExpression();
+    }
+    if (current_token.type == SEMICOLON) {
+      nextToken();
+    } else {
+      throwError();
+    }
+  } else if (current_token.type == BREAK) {
+    nextToken();
+    if (current_token.type == SEMICOLON) {
+      nextToken();
+      return;
+    } else {
+      throwError();
+    }
+  }
+}
+
+// 20. expression → id-assign = expression | simple-expression | id-assign
+void parseExpression() {
+  if (current_token.type != IDENTIFIER) {
+    parseSimpleExpression();
+  } else if (current_token.type == IDENTIFIER) {
+    nextToken();
+    if (current_token.type == ASSIGNMENT_OP) {
+      nextToken();
+      parseExpression();
+    } else if (current_token.type == SEMICOLON) {
+      return;
+    } else {
+      throwError();
+    }
+  } else {
+    throwError();
+  }
+}
+
+// 21. id-assign → ID
+void parseIdAssign() {}
+
+// 22. simple-expression → additive-expression relop additive-expression |
+// additive-expression
+void parseSimpleExpression() {}
+
+// 23. relop → <= | < | > | >= | == | != | && | ||
+void parseRelop() {}
+
+// 24. additive-expression → additive-expression addop term | term
+void parseAdditiveExpression() {}
+
+// 25. addop → + | -
+void parseAddOp() {}
+
+// 26. term → term mulop factor | factor
+void parseTerm() {}
+
+// 27. mulop → * | /
+void parseMulOp() {}
+
+// 28. factor → ( expression ) | id-assign | call | num
+void parseFactor() {}
+
+// 29. call → ID ( args )
+void parseCall() {}
+
+// 30. args → arg-list | ε
+void parseArgs() {}
+
+// 31. arg-list → expression a_list
+void parseArgList() {}
+
+// 32. a_list -> , expression a_list | ε
+void parseAList() {}
+
+// 33. num → Signed num | Unsigned num
+void parseNum() {}
+
+// 34. Unsigned num → value
+void parseUnsignedNum() {}
+
+// 35. Signed num → pos-num | neg-num
+void parseSignedNum() {}
+
+// 36. pos-num → + value
+void parsePosNum() {}
+
+// 37. neg-num → - value
+void parseNegNum() {}
+
+// 38. value → INT_NUM | FLOAT_NUM
+void parseValue() {}
+
+// 39. comment → /@ STR @/ | /^ STR
+// As per the docs comments are to be ignored.
+void parseComment() {}
+
+// 40. include_command → include ( F_name.txt );
+// As per the docs include commands should be handled by the scanner where the
+// files are dumped into the stream.
+void parseIncludeCommand() {}
+
+// 41. F_name → STR
+void parseFName() { return; }
