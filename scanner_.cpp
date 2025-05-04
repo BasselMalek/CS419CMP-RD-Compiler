@@ -5,6 +5,7 @@
 #include <vector>
 #include <unordered_map>
 #include <cctype>
+#include <iomanip>  // for setw and formatting
 
 using namespace std;
 
@@ -47,19 +48,17 @@ public:
 
             char current = peek();
 
-            // ❌ Explicitly reject C-style comments
             if (current == '/' && (peek(1) == '*' || peek(1) == '/')) {
                 Token token;
                 token.line = line;
                 token.text = string(1, current) + peek(1);
                 token.type = "Invalid Comment";
                 token.error = true;
-                get(); get();  // consume invalid pattern
+                get(); get();
                 tokens.push_back(token);
                 continue;
             }
 
-            // ✅ Custom multi-line or single-line comment
             if (current == '/' && (peek(1) == '@' || peek(1) == '^')) {
                 vector<Token> commentTokens = lexComment();
                 tokens.insert(tokens.end(), commentTokens.begin(), commentTokens.end());
@@ -162,7 +161,7 @@ private:
         while (pos < source.size() && (isalnum(peek()) || peek() == '.')) {
             char c = peek();
             if (c == '.') {
-                if (seenDot) token.error = true;  // multiple dots
+                if (seenDot) token.error = true;
                 seenDot = true;
             }
             if (isalpha(c)) {
@@ -350,13 +349,25 @@ int main() {
     Lexer lexer(sourceCode);
     vector<Token> tokens = lexer.tokenize();
 
+    // Output to console and file
+    ofstream out("tokens.txt");
+    cout << left << setw(8) << "Line" << "| " << setw(15) << "Lexeme" << "| " << "Token Type\n";
+    cout << string(50, '-') << "\n";
+
+    out << left << setw(8) << "Line" << "| " << setw(15) << "Lexeme" << "| " << "Token Type\n";
+    out << string(50, '-') << "\n";
+
     int errorCount = 0;
     for (const auto& token : tokens) {
-        cout << "Line: " << token.line
-             << (token.error ? " Error in" : "") << " Token Text: " << token.text
-             << " Token Type: " << token.type << "\n";
+        string errorNote = token.error ? " (Error)" : "";
+        cout << left << setw(8) << token.line << "| " << setw(15) << token.text << "| " << token.type << errorNote << "\n";
+        out  << left << setw(8) << token.line << "| " << setw(15) << token.text << "| " << token.type << errorNote << "\n";
         if (token.error) errorCount++;
     }
-    cout << "Total Number of errors: " << errorCount << "\n";
+
+    cout << "\nTotal Number of lexical errors: " << errorCount << "\n";
+    out << "\nTotal Number of lexical errors: " << errorCount << "\n";
+
+    out.close();
     return 0;
 }
