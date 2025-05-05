@@ -71,7 +71,7 @@ void throwError() {
 }
 
 bool isStartOfStatement(TokenType type) {
-  return type == SEMICOLON || type == IDENTIFIER || type == CONSTANT ||
+  return type == IDENTIFIER || type == CONSTANT ||
          type == OPEN_PARTH || type == OPEN_BRACE || type == CONDITION ||
          type == LOOP || type == RETURN || type == BREAK;
 }
@@ -80,16 +80,6 @@ bool isStartOfStatement(TokenType type) {
 int parseProgram() {
   if (current_token.value == "CLEAR") {
     parseDeclarations();
-    if (error_count == 0) {
-      cout << "Parsing completed successfully." << endl;
-      return 0;
-    } else {
-      cout << "Parsing completed with " << error_count << " errors." << endl;
-      return 1;
-    }
-  } else {
-    cout << "Errors encountered in scanning. Could not parse." << endl;
-    return 1;
   }
 }
 
@@ -107,7 +97,7 @@ void parseDeclarationList() {
 // 4. declaration → var-declaration | fun-declaration
 void parseDeclaration() {
   if (isDataType(current_token.type)) {
-    nextToken();
+    parseTypeSpecifier();
     if (current_token.type == IDENTIFIER) {
       nextToken();
       if (current_token.type == OPEN_PARTH) {
@@ -125,20 +115,15 @@ void parseDeclaration() {
 
 // 5. var-declaration → type-specifier ID ;
 void parseVarDec() {
-  if (isDataType(current_token.type)) {
+  if (current_token.type == IDENTIFIER) {
     nextToken();
-    if (current_token.type == IDENTIFIER) {
+    if (current_token.type == SEMICOLON) {
       nextToken();
-      if (current_token.type == SEMICOLON) {
-        nextToken();
-        return;
-      } else if (current_token.type == COMMA) {
-        nextToken();
-        parseVarDec();
-        return;
-      } else {
-        throwError();
-      }
+      return;
+    } else if (current_token.type == COMMA) {
+      nextToken();
+      parseVarDec();
+      return;
     } else {
       throwError();
     }
@@ -148,7 +133,13 @@ void parseVarDec() {
 }
 
 // 6. type-specifier → Imw | SIMw | Chj | Series | IMwf | SIMwf | NOReturn
-void parseTypeSpecifier() {}
+void parseTypeSpecifier() {
+  if (isDataType(current_token.type)) {
+    nextToken();
+  } else {
+    throwError();
+  }
+}
 
 // 7. fun-declaration → type-specifier ID ( params ) compound-stmt | comment
 // type-specifier ID
@@ -172,11 +163,11 @@ void parseFunDec() {
 
 // 8. params → param-list | NOReturn | ε
 void parseParams() {
-  nextToken();
   if (isDataType(current_token.type)) {
     parseParamList();
-  } else if (current_token.type == VOID || current_token.type == CLOSE_PARTH) {
+  } else if (current_token.type == VOID) {
     nextToken();
+  } else if (current_token.type == CLOSE_PARTH) {
     return;
   } else {
     throwError();
@@ -319,12 +310,41 @@ void parseSelectionStmt() {
 void parseIterationStmt() {
   if (current_token.type == LOOP) {
     nextToken();
-    if (current_token.type == OPEN_PARTH) {
-      nextToken();
-      parseExpression();
-      if (current_token.type == CLOSE_PARTH) {
+    if (current_token.value == "RepeatWhen") {
+      if (current_token.type == OPEN_PARTH) {
         nextToken();
-        parseStatement();
+        parseExpression();
+        if (current_token.type == CLOSE_PARTH) {
+          nextToken();
+          parseStatement();
+        } else {
+          throwError();
+        }
+      } else {
+        throwError();
+      }
+    } else if (current_token.value == "Reiterate") {
+      if (current_token.type == OPEN_PARTH) {
+        nextToken();
+        parseExpression();
+        if (current_token.type == SEMICOLON) {
+          nextToken();
+          parseExpression();
+          if (current_token.type == SEMICOLON) {
+            nextToken();
+            parseExpression();
+            if (current_token.type == CLOSE_PARTH) {
+              nextToken();
+              parseStatement();
+            } else {
+              throwError();
+            }
+          } else {
+            throwError();
+          }
+        } else {
+          throwError();
+        }
       } else {
         throwError();
       }
@@ -359,15 +379,137 @@ void parseJumpStmt() {
 
 // 20. expression → id-assign = expression | simple-expression | id-assign
 void parseExpression() {
-  if (current_token.type != IDENTIFIER) {
-    parseSimpleExpression();
-  } else if (current_token.type == IDENTIFIER) {
-    nextToken();
+  if (current_token.type == IDENTIFIER) {
+    parseIdAssign();
     if (current_token.type == ASSIGNMENT_OP) {
       nextToken();
       parseExpression();
-    } else if (current_token.type == SEMICOLON) {
-      return;
+    }
+  } else {
+    parseSimpleExpression();
+  }
+}
+
+// 21. id-assign → ID
+void parseIdAssign() {
+  if (current_token.type == IDENTIFIER) {
+    nextToken();
+  } else {
+    throwError();
+  }
+}
+
+// 22. simple-expression → additive-expression relop additive-expression |
+// additive-expression
+void parseSimpleExpression() {
+  parseAdditiveExpression();
+  if (current_token.type == RELATIONAL_OP || current_token.type == LOGIC_OP) {
+    parseRelop();
+    parseAdditiveExpression();
+  }
+}
+
+// 23. relop → <= | < | > | >= | == | != | && | ||
+void parseRelop() {
+  if (current_token.type == RELATIONAL_OP || current_token.type == LOGIC_OP) {
+    nextToken();
+  } else {
+    throwError();
+  }
+}
+
+// 24. additive-expression →  term additive-expression'
+// additive-expression' → addop term additive-expression' | ε
+void parseAdditiveExpression() {
+  parseTerm();
+  parseAdditiveExpressionPrime();
+}
+
+void parseAdditiveExpressionPrime() {
+  if (current_token.type == ARITHMETIC_OP &&
+      (current_token.value == "+" || current_token.value == "-")) {
+    parseAddOp();
+    parseTerm();
+    parseAdditiveExpressionPrime();
+  }
+}
+
+// 25. addop → + | -
+void parseAddOp() {
+  if (current_token.type == ARITHMETIC_OP &&
+      (current_token.value == "+" || current_token.value == "-")) {
+    nextToken();
+  } else {
+    throwError();
+  }
+}
+
+// 26. term → factor term'
+// term' → mulop factor term' | ε
+void parseTerm() {
+  parseFactor();
+  parseTermPrime();
+}
+
+// 27. mulop → * | /
+void parseMulOp() {
+  if (current_token.type == ARITHMETIC_OP &&
+      (current_token.value == "*" || current_token.value == "/")) {
+    nextToken();
+  } else {
+    throwError();
+  }
+}
+
+void parseTermPrime() {
+  if (current_token.type == ARITHMETIC_OP &&
+      (current_token.value == "*" || current_token.value == "/")) {
+    parseMulOp();
+    parseFactor();
+    parseTermPrime();
+  }
+}
+
+// 28. factor → ( expression ) | id-assign | call | num
+void parseFactor() {
+  switch (current_token.type) {
+  case OPEN_PARTH:
+    nextToken();
+    parseExpression();
+    if (current_token.type == CLOSE_PARTH) {
+      nextToken();
+    } else {
+      throwError();
+    }
+    break;
+  case IDENTIFIER:
+    nextToken();
+    if (current_token.type == OPEN_PARTH) {
+      parseCall();
+    }
+    break;
+  case CONSTANT:
+    parseNum();
+    break;
+  case ARITHMETIC_OP:
+    if (current_token.value == "+" || current_token.value == "-") {
+      parseSignedNum();
+    } else {
+      throwError();
+    }
+    break;
+  default:
+    throwError();
+  }
+}
+
+// 29. call → ID ( args )
+void parseCall() {
+  if (current_token.type == OPEN_PARTH) {
+    nextToken();
+    parseArgs();
+    if (current_token.type == CLOSE_PARTH) {
+      nextToken();
     } else {
       throwError();
     }
@@ -376,69 +518,104 @@ void parseExpression() {
   }
 }
 
-// 21. id-assign → ID
-void parseIdAssign() {}
-
-// 22. simple-expression → additive-expression relop additive-expression |
-// additive-expression
-void parseSimpleExpression() {}
-
-// 23. relop → <= | < | > | >= | == | != | && | ||
-void parseRelop() {}
-
-// 24. additive-expression → additive-expression addop term | term
-void parseAdditiveExpression() {}
-
-// 25. addop → + | -
-void parseAddOp() {}
-
-// 26. term → term mulop factor | factor
-void parseTerm() {}
-
-// 27. mulop → * | /
-void parseMulOp() {}
-
-// 28. factor → ( expression ) | id-assign | call | num
-void parseFactor() {}
-
-// 29. call → ID ( args )
-void parseCall() {}
-
 // 30. args → arg-list | ε
-void parseArgs() {}
+void parseArgs() {
+  if (current_token.type != CLOSE_PARTH) {
+    parseArgList();
+  }
+}
 
 // 31. arg-list → expression a_list
-void parseArgList() {}
+void parseArgList() {
+  parseExpression();
+  parseAList();
+}
 
 // 32. a_list -> , expression a_list | ε
-void parseAList() {}
+void parseAList() {
+  if (current_token.type == COMMA) {
+    nextToken();
+    parseExpression();
+    parseAList();
+  }
+}
 
 // 33. num → Signed num | Unsigned num
-void parseNum() {}
+void parseNum() {
+  if (current_token.type == ARITHMETIC_OP &&
+      (current_token.value == "+" || current_token.value == "-")) {
+    parseSignedNum();
+  } else if (current_token.type == CONSTANT) {
+    parseUnsignedNum();
+  } else {
+    throwError();
+  }
+}
 
 // 34. Unsigned num → value
-void parseUnsignedNum() {}
+void parseUnsignedNum() { parseValue(); }
 
 // 35. Signed num → pos-num | neg-num
-void parseSignedNum() {}
+void parseSignedNum() {
+  if (current_token.type == ARITHMETIC_OP) {
+    if (current_token.value == "+") {
+      parsePosNum();
+    } else if (current_token.value == "-") {
+      parseNegNum();
+    } else {
+      throwError();
+    }
+  } else {
+    throwError();
+  }
+}
 
 // 36. pos-num → + value
-void parsePosNum() {}
+void parsePosNum() {
+  if (current_token.type == ARITHMETIC_OP && current_token.value == "+") {
+    nextToken();
+    parseValue();
+  } else {
+    throwError();
+  }
+}
 
 // 37. neg-num → - value
-void parseNegNum() {}
+void parseNegNum() {
+  if (current_token.type == ARITHMETIC_OP && current_token.value == "-") {
+    nextToken();
+    parseValue();
+  } else {
+    throwError();
+  }
+}
 
 // 38. value → INT_NUM | FLOAT_NUM
-void parseValue() {}
+void parseValue() {
+  if (current_token.type == CONSTANT) {
+    nextToken();
+  } else {
+    throwError();
+  }
+}
 
 // 39. comment → /@ STR @/ | /^ STR
 // As per the docs comments are to be ignored.
-void parseComment() {}
+void parseComment() {
+  nextToken();
+}
 
 // 40. include_command → include ( F_name.txt );
 // As per the docs include commands should be handled by the scanner where the
 // files are dumped into the stream.
-void parseIncludeCommand() {}
+void parseIncludeCommand() {
+}
 
 // 41. F_name → STR
-void parseFName() { return; }
+void parseFName() {
+  if (current_token.type == STRING) {
+    nextToken();
+  } else {
+    throwError();
+  }
+}
