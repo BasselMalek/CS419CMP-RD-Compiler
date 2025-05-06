@@ -1,57 +1,48 @@
 ﻿#include "parser.h"
-#include "iostream"
-#include "string"
-#include "vector"
-using namespace std;
+#include <iostream>
 
-enum TokenType {
-  CLEAR,
-  CONDITION,
-  INTEGER,
-  SINTEGER,
-  CHARACTER,
-  STRING,
-  FLOAT,
-  SFLOAT,
-  VOID,
-  LOOP,
-  RETURN,
-  ARITHMETIC_OP,
-  LOGIC_OP,
-  RELATIONAL_OP,
-  ASSIGNMENT_OP,
-  ACCESS_OP,
-  OPEN_BRACE,
-  CLOSE_BRACE,
-  OPEN_BRACKET,
-  CLOSE_BRACKET,
-  OPEN_PARTH,
-  CLOSE_PARTH,
-  CONSTANT,
-  QUOTATION_MARK,
-  INCLUSION,
-  STRUCT,
-  BREAK,
-  IDENTIFIER,
-  COMMA,
-  COLON,
-  SEMICOLON
-};
+Token::Token(TokenType t, std::string val) {
+  this->type = t;
+  this->value = val;
+}
 
-struct Token {
-  TokenType type;
-  string value;
-  Token(TokenType t, string val) {
-    this->type = t;
-    this->value = val;
+Parser::Parser() : token_index(0), line_count(0), error_count(0) {}
+
+void Parser::setTokens(const std::vector<Token> &input_tokens) {
+  tokens = input_tokens;
+  token_index = 0;
+  if (!tokens.empty()) {
+    current_token = tokens[0];
   }
-};
+}
 
-unsigned int line_count = 0, error_count = 0;
-std::vector<Token> tokens;
-Token current_token = Token(CLEAR, "include");
+int Parser::parse() {
+  if (tokens.empty()) {
+    std::cout << "Error: No tokens to parse." << std::endl;
+    return 1;
+  }
 
-bool isDataType(TokenType token) {
+  if (current_token.type == CLEAR) {
+    nextToken();
+    parseDeclarations();
+
+    if (error_count == 0) {
+      std::cout << "Parsing completed successfully." << std::endl;
+      return 0;
+    } else {
+      std::cout << "Parsing completed with " << error_count << " errors."
+                << std::endl;
+      return 1;
+    }
+  } else {
+    std::cout << "Invalid token stream. Rescan and try again." << std::endl;
+    return 1;
+  }
+}
+
+unsigned int Parser::getErrorCount() const { return error_count; }
+
+bool Parser::isDataType(TokenType token) {
   switch (token) {
   case INTEGER:
   case SINTEGER:
@@ -66,13 +57,14 @@ bool isDataType(TokenType token) {
   }
 }
 
-bool isStartOfStatement(TokenType type) {
-  return type == IDENTIFIER || type == CONSTANT || type == OPEN_PARTH ||
-         type == OPEN_BRACE || type == CONDITION || type == LOOP ||
-         type == RETURN || type == BREAK;
+bool Parser::isStartOfStatement(TokenType type) {
+  return type == IDENTIFIER || type == CONSTANT ||
+         (type == BRACE && (current_token.value == "(") ||
+          (current_token.value == "{")) ||
+         type == CONDITION || type == LOOP || type == RETURN || type == BREAK;
 }
 
-bool isStartsOfLine(TokenType token) {
+bool Parser::isStartsOfLine(TokenType token) {
   switch (token) {
   case CLEAR:
   case CONDITION:
@@ -95,60 +87,51 @@ bool isStartsOfLine(TokenType token) {
   }
 }
 
-static void nextToken() {
-  static int head = 0;
-  current_token = tokens[++head];
-  line_count += (isStartsOfLine(current_token.type)) ? 1 : 0;
+void Parser::nextToken() {
+  if (token_index + 1 < tokens.size()) {
+    current_token = tokens[++token_index];
+    line_count += (isStartsOfLine(current_token.type)) ? 1 : 0;
+  } else {
+    current_token = Token(CLEAR, "EOF");
+  }
 }
 
-void throwError() {
+void Parser::throwError() {
   error_count++;
-  cout << "Error at line " << line_count << ": Unexpected token "
-       << current_token.value << endl;
-  while (current_token.type != SEMICOLON) {
+  std::cout << "Error at line " << line_count << ": Unexpected token "
+            << current_token.value << std::endl;
+
+  while (current_token.type != SEMICOLON && token_index + 1 < tokens.size()) {
     nextToken();
   }
-  nextToken();
-  if (isDataType(current_token.type)) {
-    parseDeclaration();
-  } else {
-    parseStatement();
+  if (current_token.type == SEMICOLON && token_index + 1 < tokens.size()) {
+    nextToken();
+    if (isDataType(current_token.type)) {
+      parseDeclaration();
+    } else if (token_index + 1 < tokens.size()) {
+      parseStatement();
+    }
   }
 }
 
-// 1. program → declaration-list | comment | include_command
-int parseProgram() {
-  if (current_token.value == "CLEAR") {
-    nextToken();
-    parseDeclarations();
-  } else {
-    cout << "Invalid token stream. Rescan and try again.";
-    return;
-  }
-}
-
-// 2. declaration-list → declaration d_list
-void parseDeclarations() {
+void Parser::parseDeclarations() {
   parseDeclaration();
   parseDeclarationList();
 }
 
-// 3. d_list -> declaration d_list | ε
-void parseDeclarationList() {
+void Parser::parseDeclarationList() {
   if (isDataType(current_token.type)) {
     parseDeclaration();
     parseDeclarationList();
   }
-  return;
 }
 
-// 4. declaration → var-declaration | fun-declaration
-void parseDeclaration() {
+void Parser::parseDeclaration() {
   if (isDataType(current_token.type)) {
     parseTypeSpecifier();
     if (current_token.type == IDENTIFIER) {
       nextToken();
-      if (current_token.type == OPEN_PARTH) {
+      if (current_token.type == BRACE && current_token.value == "(") {
         parseFunDec();
       } else {
         parseVarDec();
@@ -161,27 +144,24 @@ void parseDeclaration() {
   }
 }
 
-// 5. var-declaration → type-specifier ID ;
-void parseVarDec() {
-  if (isDataType(current_token.type)) {
-    nextToken();
-  }  
-  if (current_token.type == IDENTIFIER) {
-    nextToken();
-  }
+void Parser::parseVarDec() {
   if (current_token.type == SEMICOLON) {
     nextToken();
     return;
   } else if (current_token.type == COMMA) {
     nextToken();
-    parseVarDec();
+    if (current_token.type == IDENTIFIER) {
+      nextToken();
+      parseVarDec();
+    } else {
+      throwError();
+    }
   } else {
     throwError();
   }
 }
 
-// 6. type-specifier → Imw | SIMw | Chj | Series | IMwf | SIMwf | NOReturn
-void parseTypeSpecifier() {
+void Parser::parseTypeSpecifier() {
   if (isDataType(current_token.type)) {
     nextToken();
   } else {
@@ -189,15 +169,13 @@ void parseTypeSpecifier() {
   }
 }
 
-// 7. fun-declaration → type-specifier ID ( params ) compound-stmt | comment
-// type-specifier ID
-void parseFunDec() {
-  if (current_token.type == OPEN_PARTH) {
+void Parser::parseFunDec() {
+  if (current_token.type == BRACE && current_token.value == "(") {
     nextToken();
     parseParams();
-    if (current_token.type == CLOSE_PARTH) {
+    if (current_token.type == BRACE && current_token.value == ")") {
       nextToken();
-      if (current_token.type == OPEN_BRACE) {
+      if (current_token.type == BRACE && current_token.value == "{") {
         parseCompoundStmt();
       } else {
         throwError();
@@ -210,61 +188,58 @@ void parseFunDec() {
   }
 }
 
-// 8. params → param-list | NOReturn | ε
-void parseParams() {
+void Parser::parseParams() {
   if (current_token.type == VOID) {
     nextToken();
   } else if (isDataType(current_token.type)) {
     parseParamList();
   }
-  if (current_token.type == CLOSE_PARTH) {
+
+  if (current_token.type == BRACE && current_token.value == ")") {
     return;
   } else {
     throwError();
   }
 }
 
-// 9. param-list → param p_list
-void parseParamList() {
+void Parser::parseParamList() {
   parseParam();
   parsePList();
 }
 
-// 10. p_list -> , param p_list | ε
-void parsePList() {
-  if (current_token.type == CLOSE_PARTH) {
+void Parser::parsePList() {
+  if (current_token.type == BRACE && current_token.value == ")") {
     return;
   } else if (current_token.type == COMMA) {
     nextToken();
     parseParam();
     parsePList();
-    return;
   } else {
     throwError();
   }
 }
 
-// 11. param → type-specifier ID
-void parseParam() {
+void Parser::parseParam() {
   if (isDataType(current_token.type)) {
     nextToken();
+  } else {
+    throwError();
+    return;
   }
+
   if (current_token.type == IDENTIFIER) {
     nextToken();
-    return;
   } else {
     throwError();
   }
 }
 
-// 12. compound-stmt → { comment local-declarations statement-list } | {
-// local-declarations statement-list }
-void parseCompoundStmt() {
-  if (current_token.type == OPEN_BRACE) {
+void Parser::parseCompoundStmt() {
+  if (current_token.type == BRACE && current_token.value == "{") {
     nextToken();
     parseLocalDecs();
     parseStmtList();
-    if (current_token.type == CLOSE_BRACE) {
+    if (current_token.type == BRACE && current_token.value == "}") {
       nextToken();
     } else {
       throwError();
@@ -274,33 +249,34 @@ void parseCompoundStmt() {
   }
 }
 
-// 13. local-declarations → var-declaration local-declarations | ε
-void parseLocalDecs() {
+void Parser::parseLocalDecs() {
   if (isDataType(current_token.type)) {
     parseVarDec();
     parseLocalDecs();
   }
 }
 
-// 14. statement-list → statement  statement-list| ε
-void parseStmtList() {
+void Parser::parseStmtList() {
   if (isStartOfStatement(current_token.type)) {
     parseStatement();
     parseStmtList();
   }
 }
 
-// 15. statement → expression-stmt | compound-stmt | selection-stmt |
-// iteration-stmt | jump-stmt
-void parseStatement() {
+void Parser::parseStatement() {
   switch (current_token.type) {
   case IDENTIFIER:
   case CONSTANT:
-  case OPEN_PARTH:
     parseExpressionStmt();
     break;
-  case OPEN_BRACE:
-    parseCompoundStmt();
+  case BRACE:
+    if (current_token.value == "(") {
+      parseExpressionStmt();
+    } else if (current_token.value == "{") {
+      parseCompoundStmt();
+    } else {
+      throwError();
+    }
     break;
   case CONDITION:
     parseSelectionStmt();
@@ -315,15 +291,21 @@ void parseStatement() {
   default:
     throwError();
     while (current_token.type != SEMICOLON &&
-           current_token.type != CLOSE_BRACE) {
+           !(current_token.type == BRACE && current_token.value == "}") &&
+           token_index + 1 < tokens.size()) {
       nextToken();
     }
   }
 }
 
-// 16. expression-stmt → expression ; | ;
-void parseExpressionStmt() {
+void Parser::parseExpressionStmt() {
+  if (current_token.type == SEMICOLON) {
+    nextToken();
+    return;
+  }
+
   parseExpression();
+
   if (current_token.type == SEMICOLON) {
     nextToken();
   } else {
@@ -331,15 +313,13 @@ void parseExpressionStmt() {
   }
 }
 
-// 17. selection-stmt → IfTrue ( expression ) statement | IfTrue ( expression )
-// statement Otherwise statement
-void parseSelectionStmt() {
+void Parser::parseSelectionStmt() {
   if (current_token.type == CONDITION) {
     nextToken();
-    if (current_token.type == OPEN_PARTH) {
+    if (current_token.type == BRACE && current_token.value == "(") {
       nextToken();
       parseExpression();
-      if (current_token.type == CLOSE_PARTH) {
+      if (current_token.type == BRACE && current_token.value == ")") {
         nextToken();
         parseStatement();
         if (current_token.value == "else") {
@@ -352,19 +332,19 @@ void parseSelectionStmt() {
     } else {
       throwError();
     }
+  } else {
+    throwError();
   }
 }
 
-// 18. iteration-stmt → RepeatWhen ( expression ) statement | Reiterate (
-// expression ; expression ; expression ) statement
-void parseIterationStmt() {
+void Parser::parseIterationStmt() {
   if (current_token.type == LOOP) {
     nextToken();
     if (current_token.value == "RepeatWhen") {
-      if (current_token.type == OPEN_PARTH) {
+      if (current_token.type == BRACE && current_token.value == "(") {
         nextToken();
         parseExpression();
-        if (current_token.type == CLOSE_PARTH) {
+        if (current_token.type == BRACE && current_token.value == ")") {
           nextToken();
           parseStatement();
         } else {
@@ -374,7 +354,7 @@ void parseIterationStmt() {
         throwError();
       }
     } else if (current_token.value == "Reiterate") {
-      if (current_token.type == OPEN_PARTH) {
+      if (current_token.type == BRACE && current_token.value == "(") {
         nextToken();
         parseExpression();
         if (current_token.type == SEMICOLON) {
@@ -383,7 +363,7 @@ void parseIterationStmt() {
           if (current_token.type == SEMICOLON) {
             nextToken();
             parseExpression();
-            if (current_token.type == CLOSE_PARTH) {
+            if (current_token.type == BRACE && current_token.value == ")") {
               nextToken();
               parseStatement();
             } else {
@@ -401,11 +381,12 @@ void parseIterationStmt() {
     } else {
       throwError();
     }
+  } else {
+    throwError();
   }
 }
 
-// 19. jump-stmt → Turnback expression ; | Stop ;
-void parseJumpStmt() {
+void Parser::parseJumpStmt() {
   if (current_token.type == RETURN) {
     nextToken();
     if (current_token.type != SEMICOLON) {
@@ -420,28 +401,29 @@ void parseJumpStmt() {
     nextToken();
     if (current_token.type == SEMICOLON) {
       nextToken();
-      return;
     } else {
       throwError();
     }
+  } else {
+    throwError();
   }
 }
 
-// 20. expression → id-assign = expression | simple-expression | id-assign
-void parseExpression() {
+void Parser::parseExpression() {
   if (current_token.type == IDENTIFIER) {
     parseIdAssign();
     if (current_token.type == ASSIGNMENT_OP) {
       nextToken();
       parseExpression();
+    } else {
+      parseSimpleExpression();
     }
   } else {
     parseSimpleExpression();
   }
 }
 
-// 21. id-assign → ID
-void parseIdAssign() {
+void Parser::parseIdAssign() {
   if (current_token.type == IDENTIFIER) {
     nextToken();
   } else {
@@ -449,9 +431,7 @@ void parseIdAssign() {
   }
 }
 
-// 22. simple-expression → additive-expression relop additive-expression |
-// additive-expression
-void parseSimpleExpression() {
+void Parser::parseSimpleExpression() {
   parseAdditiveExpression();
   if (current_token.type == RELATIONAL_OP || current_token.type == LOGIC_OP) {
     parseRelop();
@@ -459,8 +439,7 @@ void parseSimpleExpression() {
   }
 }
 
-// 23. relop → <= | < | > | >= | == | != | && | ||
-void parseRelop() {
+void Parser::parseRelop() {
   if (current_token.type == RELATIONAL_OP || current_token.type == LOGIC_OP) {
     nextToken();
   } else {
@@ -468,14 +447,12 @@ void parseRelop() {
   }
 }
 
-// 24. additive-expression →  term additive-expression'
-// additive-expression' → addop term additive-expression' | ε
-void parseAdditiveExpression() {
+void Parser::parseAdditiveExpression() {
   parseTerm();
   parseAdditiveExpressionPrime();
 }
 
-void parseAdditiveExpressionPrime() {
+void Parser::parseAdditiveExpressionPrime() {
   if (current_token.type == ARITHMETIC_OP &&
       (current_token.value == "+" || current_token.value == "-")) {
     parseAddOp();
@@ -484,8 +461,7 @@ void parseAdditiveExpressionPrime() {
   }
 }
 
-// 25. addop → + | -
-void parseAddOp() {
+void Parser::parseAddOp() {
   if (current_token.type == ARITHMETIC_OP &&
       (current_token.value == "+" || current_token.value == "-")) {
     nextToken();
@@ -494,15 +470,12 @@ void parseAddOp() {
   }
 }
 
-// 26. term → factor term'
-// term' → mulop factor term' | ε
-void parseTerm() {
+void Parser::parseTerm() {
   parseFactor();
   parseTermPrime();
 }
 
-// 27. mulop → * | /
-void parseMulOp() {
+void Parser::parseMulOp() {
   if (current_token.type == ARITHMETIC_OP &&
       (current_token.value == "*" || current_token.value == "/")) {
     nextToken();
@@ -511,7 +484,7 @@ void parseMulOp() {
   }
 }
 
-void parseTermPrime() {
+void Parser::parseTermPrime() {
   if (current_token.type == ARITHMETIC_OP &&
       (current_token.value == "*" || current_token.value == "/")) {
     parseMulOp();
@@ -520,24 +493,29 @@ void parseTermPrime() {
   }
 }
 
-// 28. factor → ( expression ) | id-assign | call | num
-void parseFactor() {
+void Parser::parseFactor() {
   switch (current_token.type) {
-  case OPEN_PARTH:
-    nextToken();
-    parseExpression();
-    if (current_token.type == CLOSE_PARTH) {
+  case BRACE:
+    if (current_token.value == "(") {
       nextToken();
+      parseExpression();
+      if (current_token.type == BRACE && current_token.value == ")") {
+        nextToken();
+      } else {
+        throwError();
+      }
     } else {
       throwError();
     }
     break;
-  case IDENTIFIER:
+  case IDENTIFIER: {
+    std::string id_name = current_token.value;
     nextToken();
-    if (current_token.type == OPEN_PARTH) {
+    if (current_token.type == BRACE && current_token.value == "(") {
       parseCall();
     }
-    break;
+    // Non-function identifier already consumed
+  } break;
   case CONSTANT:
     parseNum();
     break;
@@ -553,12 +531,11 @@ void parseFactor() {
   }
 }
 
-// 29. call → ID ( args )
-void parseCall() {
-  if (current_token.type == OPEN_PARTH) {
+void Parser::parseCall() {
+  if (current_token.type == BRACE && current_token.value == "(") {
     nextToken();
     parseArgs();
-    if (current_token.type == CLOSE_PARTH) {
+    if (current_token.type == BRACE && current_token.value == ")") {
       nextToken();
     } else {
       throwError();
@@ -568,21 +545,18 @@ void parseCall() {
   }
 }
 
-// 30. args → arg-list | ε
-void parseArgs() {
-  if (current_token.type != CLOSE_PARTH) {
+void Parser::parseArgs() {
+  if (!(current_token.type == BRACE && current_token.value == ")")) {
     parseArgList();
   }
 }
 
-// 31. arg-list → expression a_list
-void parseArgList() {
+void Parser::parseArgList() {
   parseExpression();
   parseAList();
 }
 
-// 32. a_list -> , expression a_list | ε
-void parseAList() {
+void Parser::parseAList() {
   if (current_token.type == COMMA) {
     nextToken();
     parseExpression();
@@ -590,8 +564,7 @@ void parseAList() {
   }
 }
 
-// 33. num → Signed num | Unsigned num
-void parseNum() {
+void Parser::parseNum() {
   if (current_token.type == ARITHMETIC_OP &&
       (current_token.value == "+" || current_token.value == "-")) {
     parseSignedNum();
@@ -602,11 +575,9 @@ void parseNum() {
   }
 }
 
-// 34. Unsigned num → value
-void parseUnsignedNum() { parseValue(); }
+void Parser::parseUnsignedNum() { parseValue(); }
 
-// 35. Signed num → pos-num | neg-num
-void parseSignedNum() {
+void Parser::parseSignedNum() {
   if (current_token.type == ARITHMETIC_OP) {
     if (current_token.value == "+") {
       parsePosNum();
@@ -620,8 +591,7 @@ void parseSignedNum() {
   }
 }
 
-// 36. pos-num → + value
-void parsePosNum() {
+void Parser::parsePosNum() {
   if (current_token.type == ARITHMETIC_OP && current_token.value == "+") {
     nextToken();
     parseValue();
@@ -630,8 +600,7 @@ void parsePosNum() {
   }
 }
 
-// 37. neg-num → - value
-void parseNegNum() {
+void Parser::parseNegNum() {
   if (current_token.type == ARITHMETIC_OP && current_token.value == "-") {
     nextToken();
     parseValue();
@@ -640,8 +609,7 @@ void parseNegNum() {
   }
 }
 
-// 38. value → INT_NUM | FLOAT_NUM
-void parseValue() {
+void Parser::parseValue() {
   if (current_token.type == CONSTANT) {
     nextToken();
   } else {
@@ -649,17 +617,13 @@ void parseValue() {
   }
 }
 
-// 39. comment → /@ STR @/ | /^ STR
-// As per the docs comments are to be ignored.
-void parseComment() { nextToken(); }
+void Parser::parseComment() { nextToken(); }
 
-// 40. include_command → include ( F_name.txt );
-// As per the docs include commands should be handled by the scanner where the
-// files are dumped into the stream.
-void parseIncludeCommand() {}
+void Parser::parseIncludeCommand() {
+  // Handle include commands if needed
+}
 
-// 41. F_name → STR
-void parseFName() {
+void Parser::parseFName() {
   if (current_token.type == STRING) {
     nextToken();
   } else {
