@@ -1,9 +1,11 @@
 ﻿#include "parser.h"
 #include "iostream"
 #include "string"
+#include "vector"
 using namespace std;
 
 enum TokenType {
+  CLEAR,
   CONDITION,
   INTEGER,
   SINTEGER,
@@ -46,8 +48,8 @@ struct Token {
 };
 
 unsigned int line_count = 0, error_count = 0;
-Token current_token = Token(INCLUSION, "include");
-static void nextToken() { int x = 1; };
+std::vector<Token> tokens;
+Token current_token = Token(CLEAR, "include");
 
 bool isDataType(TokenType token) {
   switch (token) {
@@ -64,34 +66,80 @@ bool isDataType(TokenType token) {
   }
 }
 
+bool isStartOfStatement(TokenType type) {
+  return type == IDENTIFIER || type == CONSTANT || type == OPEN_PARTH ||
+         type == OPEN_BRACE || type == CONDITION || type == LOOP ||
+         type == RETURN || type == BREAK;
+}
+
+bool isStartsOfLine(TokenType token) {
+  switch (token) {
+  case CLEAR:
+  case CONDITION:
+  case LOOP:
+  case RETURN:
+  case BREAK:
+  case STRUCT:
+  case IDENTIFIER:
+  case INCLUSION:
+  case VOID:
+  case INTEGER:
+  case SINTEGER:
+  case CHARACTER:
+  case STRING:
+  case FLOAT:
+  case SFLOAT:
+    return true;
+  default:
+    return false;
+  }
+}
+
+static void nextToken() {
+  static int head = 0;
+  current_token = tokens[++head];
+  line_count += (isStartsOfLine(current_token.type)) ? 1 : 0;
+}
+
 void throwError() {
   error_count++;
   cout << "Error at line " << line_count << ": Unexpected token "
        << current_token.value << endl;
-}
-
-bool isStartOfStatement(TokenType type) {
-  return type == IDENTIFIER || type == CONSTANT ||
-         type == OPEN_PARTH || type == OPEN_BRACE || type == CONDITION ||
-         type == LOOP || type == RETURN || type == BREAK;
+  while (current_token.type != SEMICOLON) {
+    nextToken();
+  }
+  nextToken();
+  if (isDataType(current_token.type)) {
+    parseDeclaration();
+  } else {
+    parseStatement();
+  }
 }
 
 // 1. program → declaration-list | comment | include_command
 int parseProgram() {
   if (current_token.value == "CLEAR") {
+    nextToken();
     parseDeclarations();
+  } else {
+    cout << "Invalid token stream. Rescan and try again.";
+    return;
   }
 }
 
 // 2. declaration-list → declaration d_list
-void parseDeclarations() { parseDeclarationList(); }
+void parseDeclarations() {
+  parseDeclaration();
+  parseDeclarationList();
+}
 
 // 3. d_list -> declaration d_list | ε
 void parseDeclarationList() {
-  parseDeclaration();
   if (isDataType(current_token.type)) {
+    parseDeclaration();
     parseDeclarationList();
   }
+  return;
 }
 
 // 4. declaration → var-declaration | fun-declaration
@@ -115,18 +163,18 @@ void parseDeclaration() {
 
 // 5. var-declaration → type-specifier ID ;
 void parseVarDec() {
+  if (isDataType(current_token.type)) {
+    nextToken();
+  }  
   if (current_token.type == IDENTIFIER) {
     nextToken();
-    if (current_token.type == SEMICOLON) {
-      nextToken();
-      return;
-    } else if (current_token.type == COMMA) {
-      nextToken();
-      parseVarDec();
-      return;
-    } else {
-      throwError();
-    }
+  }
+  if (current_token.type == SEMICOLON) {
+    nextToken();
+    return;
+  } else if (current_token.type == COMMA) {
+    nextToken();
+    parseVarDec();
   } else {
     throwError();
   }
@@ -145,6 +193,7 @@ void parseTypeSpecifier() {
 // type-specifier ID
 void parseFunDec() {
   if (current_token.type == OPEN_PARTH) {
+    nextToken();
     parseParams();
     if (current_token.type == CLOSE_PARTH) {
       nextToken();
@@ -163,11 +212,12 @@ void parseFunDec() {
 
 // 8. params → param-list | NOReturn | ε
 void parseParams() {
-  if (isDataType(current_token.type)) {
-    parseParamList();
-  } else if (current_token.type == VOID) {
+  if (current_token.type == VOID) {
     nextToken();
-  } else if (current_token.type == CLOSE_PARTH) {
+  } else if (isDataType(current_token.type)) {
+    parseParamList();
+  }
+  if (current_token.type == CLOSE_PARTH) {
     return;
   } else {
     throwError();
@@ -601,15 +651,12 @@ void parseValue() {
 
 // 39. comment → /@ STR @/ | /^ STR
 // As per the docs comments are to be ignored.
-void parseComment() {
-  nextToken();
-}
+void parseComment() { nextToken(); }
 
 // 40. include_command → include ( F_name.txt );
 // As per the docs include commands should be handled by the scanner where the
 // files are dumped into the stream.
-void parseIncludeCommand() {
-}
+void parseIncludeCommand() {}
 
 // 41. F_name → STR
 void parseFName() {
