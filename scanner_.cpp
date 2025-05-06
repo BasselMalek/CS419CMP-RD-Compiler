@@ -5,11 +5,10 @@
 #include <vector>
 #include <unordered_map>
 #include <cctype>
-#include <iomanip>  // for setw and formatting
+#include <iomanip>
 
 using namespace std;
 
-// Structure to hold token information.
 struct Token {
     int line;
     string text;
@@ -17,7 +16,6 @@ struct Token {
     bool error;
 };
 
-// The Lexer class implements the lexical analysis.
 class Lexer {
 public:
     Lexer(const string& sourceCode)
@@ -73,7 +71,31 @@ public:
                 continue;
             }
             else if (isalpha(current) || current == '_') {
-                tokens.push_back(lexIdentifierOrKeyword());
+                Token keywordToken = lexIdentifierOrKeyword();
+
+                // Handle include statements
+                if (keywordToken.type == "Inclusion") {
+                    skipWhitespace();
+                    if (peek() == '"') {
+                        Token fileToken = lexString();
+                        string includedFile = fileToken.text;
+
+                        string includedCode = readFile(includedFile);
+                        Lexer includedLexer(includedCode);
+                        vector<Token> includedTokens = includedLexer.tokenize();
+                        tokens.insert(tokens.end(), includedTokens.begin(), includedTokens.end());
+
+                        // Optional: log the include itself
+                        tokens.push_back(keywordToken);
+                        tokens.push_back(fileToken);
+                    } else {
+                        keywordToken.error = true;
+                        keywordToken.type = "Invalid Include";
+                        tokens.push_back(keywordToken);
+                    }
+                } else {
+                    tokens.push_back(keywordToken);
+                }
                 continue;
             }
             else if (isdigit(current)) {
@@ -180,14 +202,14 @@ private:
         token.line = line;
         token.error = false;
         string str;
-        get(); // consume opening "
+        get();
 
         while (pos < source.size() && peek() != '"') {
             str.push_back(get());
         }
 
         if (peek() == '"') {
-            get(); // consume closing "
+            get();
             token.type = "String Literal";
         } else {
             token.type = "Unterminated String";
@@ -203,14 +225,14 @@ private:
         token.line = line;
         token.error = false;
         string str;
-        get(); // consume opening '
+        get();
 
         if (pos < source.size() && peek() != '\'') {
             str.push_back(get());
         }
 
         if (peek() == '\'') {
-            get(); // consume closing '
+            get();
             token.type = "Character Literal";
         } else {
             token.type = "Unterminated Char";
@@ -326,9 +348,19 @@ private:
         }
         return commentTokens;
     }
+
+    string readFile(const string& fileName) {
+        ifstream file(fileName);
+        if (!file.is_open()) {
+            cerr << "Error: Unable to open file \"" << fileName << "\"" << endl;
+            exit(EXIT_FAILURE);
+        }
+        stringstream buffer;
+        buffer << file.rdbuf();
+        return buffer.str();
+    }
 };
 
-// Utility to read file content into a string
 string readFile(const string &fileName) {
     ifstream file(fileName);
     if (!file.is_open()) {
@@ -349,11 +381,9 @@ int main() {
     Lexer lexer(sourceCode);
     vector<Token> tokens = lexer.tokenize();
 
-    // Output to console and file
     ofstream out("tokens.txt");
     cout << left << setw(8) << "Line" << "| " << setw(15) << "Lexeme" << "| " << "Token Type\n";
     cout << string(50, '-') << "\n";
-
     out << left << setw(8) << "Line" << "| " << setw(15) << "Lexeme" << "| " << "Token Type\n";
     out << string(50, '-') << "\n";
 
