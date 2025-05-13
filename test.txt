@@ -2,7 +2,7 @@
 
 // Rule 40, 41: include_command → include ( F_name.txt );
 include (utils.txt);
-include (includeTest.txt); // Testing include with includeTest.txt
+include "includeTest.txt"; // Testing include with includeTest.txt
 // Rule 39: comment → /^ STR
 /^ Testing single-line comment
 

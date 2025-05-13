@@ -12,12 +12,72 @@ Line    | Lexeme         | Token Type
 4       | txt            | IDENTIFIER
 4       | )              | BRACE
 4       | ;              | SEMICOLON
-5       | include        | INVALID_INCLUSION (Error)
-5       | (              | BRACE
-5       | includeTest    | IDENTIFIER
-5       | .              | UNKNOWN (Error)
-5       | txt            | IDENTIFIER
-5       | )              | BRACE
+1       | /@             | COMMENT_START
+1       |  Content for includeTest.txt to test Project 3 grammar rules | COMMENT_CONTENT
+1       | @/             | COMMENT_END
+3       | //             | SINGLE_LINE_COMMENT_START
+3       |  Rule 39: comment → /@ STR @/| SINGLE_LINE_COMMENT_CONTENT
+4       | /@             | COMMENT_START
+4       |  Utility functions | COMMENT_CONTENT
+4       | @/             | COMMENT_END
+6       | //             | SINGLE_LINE_COMMENT_START
+6       |  Rule 39: comment → /^ STR| SINGLE_LINE_COMMENT_CONTENT
+7       | /^             | SINGLE_LINE_COMMENT_START
+7       |  Helper function definition| SINGLE_LINE_COMMENT_CONTENT
+9       | //             | SINGLE_LINE_COMMENT_START
+9       |  Rules 5, 6: var-declaration → type-specifier ID ;| SINGLE_LINE_COMMENT_CONTENT
+10      | Imw            | INTEGER
+10      | util_var       | IDENTIFIER
+10      | ;              | SEMICOLON
+10      | //             | SINGLE_LINE_COMMENT_START
+10      |  Global variable| SINGLE_LINE_COMMENT_CONTENT
+12      | //             | SINGLE_LINE_COMMENT_START
+12      |  Rule 7: fun-declaration → type-specifier ID ( params ) compound-stmt| SINGLE_LINE_COMMENT_CONTENT
+13      | Imw            | INTEGER
+13      | util_func      | IDENTIFIER
+13      | (              | BRACE
+13      | Imw            | INTEGER
+13      | input          | IDENTIFIER
+13      | )              | BRACE
+13      | {              | BRACE
+14      | //             | SINGLE_LINE_COMMENT_START
+14      |  Rule 13: local-declarations| SINGLE_LINE_COMMENT_CONTENT
+15      | Imw            | INTEGER
+15      | temp           | IDENTIFIER
+15      | ;              | SEMICOLON
+17      | //             | SINGLE_LINE_COMMENT_START
+17      |  Rule 20-27: expression with addop and relop| SINGLE_LINE_COMMENT_CONTENT
+18      | temp           | IDENTIFIER
+18      | =              | ASSIGNMENT_OP
+18      | input          | IDENTIFIER
+18      | +              | ADDOP
+18      | 5              | INTEGER
+18      | ;              | SEMICOLON
+20      | //             | SINGLE_LINE_COMMENT_START
+20      |  Rule 17: selection-stmt| SINGLE_LINE_COMMENT_CONTENT
+21      | IfTrue         | CONDITION
+21      | (              | BRACE
+21      | temp           | IDENTIFIER
+21      | >              | RELATIONAL_OP
+21      | 0              | INTEGER
+21      | )              | BRACE
+21      | {              | BRACE
+22      | temp           | IDENTIFIER
+22      | =              | ASSIGNMENT_OP
+22      | temp           | IDENTIFIER
+22      | -              | ADDOP
+22      | 1              | INTEGER
+22      | ;              | SEMICOLON
+23      | }              | BRACE
+25      | //             | SINGLE_LINE_COMMENT_START
+25      |  Rule 19: jump-stmt| SINGLE_LINE_COMMENT_CONTENT
+26      | Turnback       | RETURN
+26      | temp           | IDENTIFIER
+26      | ;              | SEMICOLON
+27      | }              | BRACE
+27      |                | EOF_TOKEN
+5       | include        | INCLUSION
+5       | "includeTest.txt"| STRING_LITERAL
 5       | ;              | SEMICOLON
 5       | //             | SINGLE_LINE_COMMENT_START
 5       |  Testing include with includeTest.txt| SINGLE_LINE_COMMENT_CONTENT
@@ -91,7 +151,7 @@ Line    | Lexeme         | Token Type
 30      | 1              | INTEGER
 30      | ;              | SEMICOLON
 31      | }              | BRACE
-31      | Otherwise      | IDENTIFIER
+31      | Otherwise      | CONDITION
 31      | {              | BRACE
 32      | x              | IDENTIFIER
 32      | =              | ASSIGNMENT_OP
@@ -147,7 +207,7 @@ Line    | Lexeme         | Token Type
 46      | ;              | SEMICOLON
 48      | //             | SINGLE_LINE_COMMENT_START
 48      |  Rule 19: jump-stmt → Stop ;| SINGLE_LINE_COMMENT_CONTENT
-49      | Stop           | IDENTIFIER
+49      | Stop           | BREAK
 49      | ;              | SEMICOLON
 50      | }              | BRACE
 52      | //             | SINGLE_LINE_COMMENT_START
@@ -284,7 +344,7 @@ Line    | Lexeme         | Token Type
 91      | }              | BRACE
 91      |                | EOF_TOKEN
 
-Total Number of lexical errors: 4
+Total Number of lexical errors: 2
 
 Parser Results:
 --------------------------------------------------

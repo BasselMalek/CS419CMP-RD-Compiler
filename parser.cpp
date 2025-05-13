@@ -343,7 +343,8 @@ void Parser::parseSelectionStmt(std::ofstream& out) {
             if (current_token.type == BRACE && current_token.text == ")") {
                 nextToken();
                 parseStatement(out);
-                if (current_token.text == "Otherwise") {
+if (current_token.type == CONDITION && current_token.text == "Otherwise")
+ {
                     nextToken();
                     parseStatement(out);
                 }

@@ -12,7 +12,7 @@
 	"Token.h"
 	"helpers.h"
 
-1747100036 source:c:\projects\comiler_project\main.cpp
+1747104413 source:c:\projects\comiler_project\main.cpp
 	"Lexer.h"
 	"Parser.h"
 	"helpers.h"
@@ -39,7 +39,7 @@
 	"Token.h"
 	"helpers.h"
 
-1747098208 source:c:\projects\comiler_project\parser.cpp
+1747102760 source:c:\projects\comiler_project\parser.cpp
 	"Parser.h"
 	<iostream>
 
@@ -70,7 +70,7 @@
 	<sstream>
 	<iostream>
 
-1747068427 source:c:\projects\comiler_project\lexer.cpp
+1747101978 source:c:\projects\comiler_project\lexer.cpp
 	"Lexer.h"
 	<iostream>
 	<fstream>

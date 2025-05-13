@@ -24,7 +24,9 @@ Lexer::Lexer(const string& sourceCode)
         {"OutLoop", "Break"},
         {"Loli", "Struct"},
         {"include", "Inclusion"},
-        {"int", "Type"}
+        {"int", "Type"},
+        {"Stop", "Break"},
+        {"Otherwise", "Condition"}
     };
 }
 
