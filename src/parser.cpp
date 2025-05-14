@@ -465,11 +465,15 @@ void Parser::parseJumpStmt(std::ofstream &out) {
 
 void Parser::parseExpression(std::ofstream &out) {
   if (current_token.type == IDENTIFIER) {
+      // I'm not sure we can edit the grammar beyond accounting for left recursion so i'll use backtracking here even though i've been avoiding it.
+    int id_token = token_index;
     parseIdAssign(out);
     if (current_token.type == ASSIGNMENT_OP) {
       nextToken();
       parseExpression(out);
     } else {
+      token_index = id_token-1;
+      nextToken();
       parseSimpleExpression(out);
     }
   } else {
@@ -569,8 +573,7 @@ void Parser::parseFactor(std::ofstream &out) {
     }
     break;
   case IDENTIFIER: {
-    std::string id_name = current_token.text;
-    nextToken();
+    parseIdAssign(out);
     if (current_token.type == BRACE && current_token.text == "(") {
       parseCall(out);
     } else if (current_token.type == ACCESS_OP) {

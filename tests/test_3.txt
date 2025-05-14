@@ -1,0 +1,122 @@
+/@ 
+   Test file for Project#3 compiler
+   This file demonstrates arrays, pointers, and complex expressions 
+@/
+
+/^ Structure for complex data
+Loli Vector {
+    IMwf x;
+    IMwf y;
+    IMwf z;
+};
+
+/^ Function to calculate vector magnitude
+IMwf magnitude(Loli Vector v) {
+    IMwf result;
+    
+    /^ Complex expression with multiple operations
+    result = (v->x * v->x) + (v->y * v->y) + (v->z * v->z);
+    
+    /^ We would need a square root function here
+    /^ For testing purposes, we'll just return the sum of squares
+    Turnback result;
+}
+
+/^ Array manipulation function
+Imw sumArray(Imw arr[], Imw size) {
+    Imw sum;
+    sum = 0;
+    
+    Reiterate (Imw i = 0; i < size; i = i + 1) {
+        sum = sum + arr[i];
+    }
+    
+    Turnback sum;
+}
+
+/^ Function with pointer parameters
+NOReturn swap(Imw* a, Imw* b) {
+    Imw temp;
+    temp = *a;
+    *a = *b;
+    *b = temp;
+}
+
+/^ Function to demonstrate nested conditions and loops
+Imw findMax(Imw arr[], Imw size) {
+    IfTrue (size <= 0) {
+        Turnback -1; /^ Error case
+    }
+    
+    Imw max;
+    max = arr[0];
+    
+    Imw i;
+    i = 1;
+    RepeatWhen (i < size) {
+        IfTrue (arr[i] > max) {
+            max = arr[i];
+        }
+        i = i + 1;
+    }
+    
+    Turnback max;
+}
+
+/^ Main function to test various features
+Imw main() {
+    /^ Array declaration and initialization
+    Imw numbers[5];
+    numbers[0] = 10;
+    numbers[1] = 20;
+    numbers[2] = 15;
+    numbers[3] = 30;
+    numbers[4] = 25;
+    
+    /^ Call array functions
+    Imw total, maximum;
+    total = sumArray(numbers, 5);
+    maximum = findMax(numbers, 5);
+    
+    /^ Vector operations
+    Loli Vector v1;
+    v1->x = 3.0;
+    v1->y = 4.0;
+    v1->z = 0.0;
+    
+    IMwf mag;
+    mag = magnitude(v1);
+    
+    /^ Testing pointers and swap function
+    Imw a, b;
+    a = 5;
+    b = 10;
+    swap(&a, &b);
+    
+    /^ Nested conditions
+    IfTrue (total > 50) {
+        IfTrue (maximum > 25) {
+            total = total + maximum;
+        } Otherwise {
+            total = total - maximum;
+        }
+    } Otherwise {
+        total = total * 2;
+    }
+    
+    /^ Logical operators
+    IfTrue ((total > 100) && (maximum > 50)) {
+        total = 100;
+    }
+    
+    IfTrue ((total < 50) || (maximum < 25)) {
+        maximum = 50;
+    }
+    
+    IfTrue (~(total == maximum)) {
+        /^ They are not equal
+        total = maximum;
+    }
+    
+    Turnback 0;
+}

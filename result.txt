@@ -1,48 +1,271 @@
 Line    | Lexeme         | Token Type
 --------------------------------------------------
 1       | /@             | COMMENT_START
-1       |  This is main function | COMMENT_CONTENT
-1       | @/             | COMMENT_END
-2       | NOReturn       | VOID
-2       | decrease       | IDENTIFIER
-2       | (              | BRACE
-2       | )              | BRACE
-2       | {              | BRACE
-3       | Imw            | INTEGER
-3       | num            | IDENTIFIER
-3       | =              | ASSIGNMENT_OP
-3       | 5              | CONSTANT
-3       | ;              | SEMICOLON
-4       | RepeatWhen     | IDENTIFIER
-4       | (              | BRACE
-4       | counter        | IDENTIFIER
-4       | <              | RELATIONAL_OP
-4       | num            | IDENTIFIER
-4       | )              | BRACE
-4       | {              | BRACE
-5       | reg3           | IDENTIFIER
-5       | =              | ASSIGNMENT_OP
-5       | reg3           | IDENTIFIER
-5       | -              | ADDOP
-5       | 1              | CONSTANT
-5       | ;              | SEMICOLON
-6       | }              | BRACE
-7       | }              | BRACE
-8       | IMwf           | FLOAT
-8       | flt            | IDENTIFIER
-8       | ;              | SEMICOLON
-9       |                | EOF_TOKEN
+1       |  
+   Test file for Project#3 compiler
+   This file demonstrates basic language features 
+| COMMENT_CONTENT
+4       | @/             | COMMENT_END
+6       | /^             | SINGLE_LINE_COMMENT_START
+6       |  Include helper functions| SINGLE_LINE_COMMENT_CONTENT
+7       | include        | INCLUSION
+7       | toinclude      | INVALID_INCLUSION (Error)
+7       | ;              | SEMICOLON
+9       | /^             | SINGLE_LINE_COMMENT_START
+9       |  Type declarations and variable declarations| SINGLE_LINE_COMMENT_CONTENT
+10      | Imw            | INTEGER
+10      | globalVar      | IDENTIFIER
+10      | ;              | SEMICOLON
+11      | SIMw           | SINTEGER
+11      | negativeNum    | IDENTIFIER
+11      | ;              | SEMICOLON
+12      | Chj            | CHARACTER
+12      | letter         | IDENTIFIER
+12      | ;              | SEMICOLON
+13      | Series         | STRING
+13      | message        | IDENTIFIER
+13      | ;              | SEMICOLON
+14      | IMwf           | FLOAT
+14      | pi             | IDENTIFIER
+14      | ;              | SEMICOLON
+15      | SIMwf          | SFLOAT
+15      | negativeFloat  | IDENTIFIER
+15      | ;              | SEMICOLON
+17      | /^             | SINGLE_LINE_COMMENT_START
+17      |  Structure definition| SINGLE_LINE_COMMENT_CONTENT
+18      | Loli           | STRUCT
+18      | Person         | IDENTIFIER
+18      | {              | BRACE
+19      | Imw            | INTEGER
+19      | age            | IDENTIFIER
+19      | ;              | SEMICOLON
+20      | Series         | STRING
+20      | name           | IDENTIFIER
+20      | ;              | SEMICOLON
+21      | IMwf           | FLOAT
+21      | height         | IDENTIFIER
+21      | ;              | SEMICOLON
+22      | }              | BRACE
+22      | ;              | SEMICOLON
+24      | /^             | SINGLE_LINE_COMMENT_START
+24      |  Function declaration with parameters| SINGLE_LINE_COMMENT_CONTENT
+25      | Imw            | INTEGER
+25      | add            | IDENTIFIER
+25      | (              | BRACE
+25      | Imw            | INTEGER
+25      | a              | IDENTIFIER
+25      | ,              | COMMA
+25      | Imw            | INTEGER
+25      | b              | IDENTIFIER
+25      | )              | BRACE
+25      | {              | BRACE
+26      | Turnback       | RETURN
+26      | a              | IDENTIFIER
+26      | +              | ADDOP
+26      | b              | IDENTIFIER
+26      | ;              | SEMICOLON
+27      | }              | BRACE
+29      | /^             | SINGLE_LINE_COMMENT_START
+29      |  Function without return value| SINGLE_LINE_COMMENT_CONTENT
+30      | NOReturn       | VOID
+30      | printMessage   | IDENTIFIER
+30      | (              | BRACE
+30      | Series         | STRING
+30      | msg            | IDENTIFIER
+30      | )              | BRACE
+30      | {              | BRACE
+31      | /^             | SINGLE_LINE_COMMENT_START
+31      |  This function doesn't return anything| SINGLE_LINE_COMMENT_CONTENT
+32      | /^             | SINGLE_LINE_COMMENT_START
+32      |  Print operation would be handled by the runtime| SINGLE_LINE_COMMENT_CONTENT
+33      | }              | BRACE
+35      | /^             | SINGLE_LINE_COMMENT_START
+35      |  Main function with various statements| SINGLE_LINE_COMMENT_CONTENT
+36      | Imw            | INTEGER
+36      | main           | IDENTIFIER
+36      | (              | BRACE
+36      | )              | BRACE
+36      | {              | BRACE
+37      | /^             | SINGLE_LINE_COMMENT_START
+37      |  Variable declarations| SINGLE_LINE_COMMENT_CONTENT
+38      | Imw            | INTEGER
+38      | x              | IDENTIFIER
+38      | ,              | COMMA
+38      | y              | IDENTIFIER
+38      | ,              | COMMA
+38      | z              | IDENTIFIER
+38      | ;              | SEMICOLON
+39      | IMwf           | FLOAT
+39      | result         | IDENTIFIER
+39      | ;              | SEMICOLON
+40      | Series         | STRING
+40      | greeting       | IDENTIFIER
+40      | ;              | SEMICOLON
+41      | Loli           | STRUCT
+41      | Person         | IDENTIFIER
+41      | person1        | IDENTIFIER
+41      | ;              | SEMICOLON
+43      | /^             | SINGLE_LINE_COMMENT_START
+43      |  Assignment operations| SINGLE_LINE_COMMENT_CONTENT
+44      | x              | IDENTIFIER
+44      | =              | ASSIGNMENT_OP
+44      | 10             | CONSTANT
+44      | ;              | SEMICOLON
+45      | y              | IDENTIFIER
+45      | =              | ASSIGNMENT_OP
+45      | 20             | CONSTANT
+45      | ;              | SEMICOLON
+46      | z              | IDENTIFIER
+46      | =              | ASSIGNMENT_OP
+46      | add            | IDENTIFIER
+46      | (              | BRACE
+46      | x              | IDENTIFIER
+46      | ,              | COMMA
+46      | y              | IDENTIFIER
+46      | )              | BRACE
+46      | ;              | SEMICOLON
+48      | /^             | SINGLE_LINE_COMMENT_START
+48      |  Conditional statement| SINGLE_LINE_COMMENT_CONTENT
+49      | IfTrue         | CONDITION
+49      | (              | BRACE
+49      | z              | IDENTIFIER
+49      | >              | RELATIONAL_OP
+49      | 25             | CONSTANT
+49      | )              | BRACE
+49      | {              | BRACE
+50      | result         | IDENTIFIER
+50      | =              | ASSIGNMENT_OP
+50      | z              | IDENTIFIER
+50      | *              | MULOP
+50      | 1.5            | CONSTANT
+50      | ;              | SEMICOLON
+51      | }              | BRACE
+51      | Otherwise      | CONDITION
+51      | {              | BRACE
+52      | result         | IDENTIFIER
+52      | =              | ASSIGNMENT_OP
+52      | z              | IDENTIFIER
+52      | /              | MULOP
+52      | 2.0            | CONSTANT
+52      | ;              | SEMICOLON
+53      | }              | BRACE
+55      | /^             | SINGLE_LINE_COMMENT_START
+55      |  Loop statement| SINGLE_LINE_COMMENT_CONTENT
+56      | Imw            | INTEGER
+56      | counter        | IDENTIFIER
+56      | ;              | SEMICOLON
+57      | counter        | IDENTIFIER
+57      | =              | ASSIGNMENT_OP
+57      | 0              | CONSTANT
+57      | ;              | SEMICOLON
+58      | RepeatWhen     | LOOP
+58      | (              | BRACE
+58      | counter        | IDENTIFIER
+58      | <              | RELATIONAL_OP
+58      | 5              | CONSTANT
+58      | )              | BRACE
+58      | {              | BRACE
+59      | counter        | IDENTIFIER
+59      | =              | ASSIGNMENT_OP
+59      | counter        | IDENTIFIER
+59      | +              | ADDOP
+59      | 1              | CONSTANT
+59      | ;              | SEMICOLON
+61      | IfTrue         | CONDITION
+61      | (              | BRACE
+61      | counter        | IDENTIFIER
+61      | ==             | RELATIONAL_OP
+61      | 3              | CONSTANT
+61      | )              | BRACE
+61      | {              | BRACE
+62      | OutLoop        | BREAK
+62      | ;              | SEMICOLON
+63      | }              | BRACE
+64      | }              | BRACE
+66      | /^             | SINGLE_LINE_COMMENT_START
+66      |  Another loop style| SINGLE_LINE_COMMENT_CONTENT
+67      | Reiterate      | LOOP
+67      | (              | BRACE
+67      | Imw            | INTEGER
+67      | i              | IDENTIFIER
+67      | =              | ASSIGNMENT_OP
+67      | 0              | CONSTANT
+67      | ;              | SEMICOLON
+67      | i              | IDENTIFIER
+67      | <              | RELATIONAL_OP
+67      | 10             | CONSTANT
+67      | ;              | SEMICOLON
+67      | i              | IDENTIFIER
+67      | =              | ASSIGNMENT_OP
+67      | i              | IDENTIFIER
+67      | +              | ADDOP
+67      | 1              | CONSTANT
+67      | )              | BRACE
+67      | {              | BRACE
+68      | IfTrue         | CONDITION
+68      | (              | BRACE
+68      | i              | IDENTIFIER
+68      | %              | UNKNOWN (Error)
+68      | 2              | CONSTANT
+68      | ==             | RELATIONAL_OP
+68      | 0              | CONSTANT
+68      | )              | BRACE
+68      | {              | BRACE
+69      | /^             | SINGLE_LINE_COMMENT_START
+69      |  Skip even numbers| SINGLE_LINE_COMMENT_CONTENT
+70      | RepeatWhen     | LOOP
+70      | ;              | SEMICOLON
+71      | }              | BRACE
+72      | }              | BRACE
+74      | /^             | SINGLE_LINE_COMMENT_START
+74      |  Structure access| SINGLE_LINE_COMMENT_CONTENT
+75      | person1        | IDENTIFIER
+75      | .              | UNKNOWN (Error)
+75      | age            | IDENTIFIER
+75      | =              | ASSIGNMENT_OP
+75      | 25             | CONSTANT
+75      | ;              | SEMICOLON
+76      | person1        | IDENTIFIER
+76      | ->             | ACCESS_OP
+76      | name           | IDENTIFIER
+76      | =              | ASSIGNMENT_OP
+76      | "John Doe"     | STRING_LITERAL
+76      | ;              | SEMICOLON
+77      | person1        | IDENTIFIER
+77      | ->             | ACCESS_OP
+77      | height         | IDENTIFIER
+77      | =              | ASSIGNMENT_OP
+77      | 175.5          | CONSTANT
+77      | ;              | SEMICOLON
+79      | /^             | SINGLE_LINE_COMMENT_START
+79      |  Return statement| SINGLE_LINE_COMMENT_CONTENT
+80      | Turnback       | RETURN
+80      | 0              | CONSTANT
+80      | ;              | SEMICOLON
+81      | }              | BRACE
+81      |                | EOF_TOKEN
 
-Total Number of lexical errors: 0
+Total Number of lexical errors: 3
 
 Parser Results:
 --------------------------------------------------
 Line : 1 Matched Rule used: Comment
-Line : 4 Not Matched Error: Unexpected token '<'
-Line : 4 Not Matched Error: Unexpected token '{'
-Line : 4 Matched Rule used: expression-stmt
-Line : 5 Matched Rule used: expression-stmt
-Line : 4 Matched Rule used: compound-stmt
-Line : 2 Matched Rule used: fun-declaration
-Line : 8 Matched Rule used: var-declaration
+Line : 6 Matched Rule used: Comment
+Line : 7 Matched Rule used: include_command
+Line : 9 Matched Rule used: Comment
+Line : 10 Matched Rule used: var-declaration
+Line : 11 Matched Rule used: var-declaration
+Line : 12 Matched Rule used: var-declaration
+Line : 13 Matched Rule used: var-declaration
+Line : 14 Matched Rule used: var-declaration
+Line : 15 Matched Rule used: var-declaration
+Line : 17 Matched Rule used: Comment
+Line : 18 Matched Rule used: struct-declaration
+Line : 24 Matched Rule used: Comment
+Line : 26 Matched Rule used: jump-stmt
+Line : 25 Matched Rule used: fun-declaration
+Line : 29 Matched Rule used: Comment
+Line : 31 Not Matched Error: Unexpected token '/^'
+Line : 30 Matched Rule used: fun-declaration
+Line : 33 Not Matched Error: Unexpected token '}'
 Total NO of errors: 2

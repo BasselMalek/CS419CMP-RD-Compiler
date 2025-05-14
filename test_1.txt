@@ -1,8 +1,0 @@
-/@ This is main function @/
-NOReturn decrease() {
-Imw num = 5;
-RepeatWhen (counter < num) {
-reg3 = reg3 - 1;
-}
-}
-IMwf flt;
