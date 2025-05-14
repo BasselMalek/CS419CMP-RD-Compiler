@@ -98,7 +98,7 @@ void Parser::parseDeclaration(std::ofstream &out) {
   if (isDataType(current_token.type)) {
     parseTypeSpecifier(out);
     if (current_token.type == IDENTIFIER) {
-      nextToken();
+      parseIdAssign(out);
       if (current_token.type == BRACE && current_token.text == "(") {
         in_function_scope = true;
         parseFunDec(out);
@@ -185,7 +185,7 @@ void Parser::parseVarDec(std::ofstream &out) {
   } else if (current_token.type == ARITHMETIC_OP && current_token.text == "*") {
     nextToken();
     if (current_token.type == IDENTIFIER) {
-      nextToken();
+      parseIdAssign(out);
     } else {
       throwError(out);
     }
@@ -256,7 +256,7 @@ void Parser::parseParam(std::ofstream &out) {
   if (isDataType(current_token.type)) {
     nextToken();
     if (current_token.type == IDENTIFIER) {
-      nextToken();
+      parseIdAssign(out);
     } else {
       throwError(out);
     }
