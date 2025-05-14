@@ -280,7 +280,8 @@ Token Lexer::lexNumber() {
         }
         token.type = TokenType::INVALID_IDENTIFIER;
     } else {
-        token.type = seenDot ? TokenType::FLOAT : TokenType::INTEGER;
+      // token.type = seenDot ? TokenType::FLOAT : TokenType::INTEGER;
+       token.type = CONSTANT;
     }
 
     token.text = numberStr;

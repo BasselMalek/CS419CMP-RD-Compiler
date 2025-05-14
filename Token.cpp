@@ -97,10 +97,3 @@ string tokenTypeToString(TokenType type) {
     return "UNKNOWN";
   }
 }
-
-Token::Token(int line, TokenType t, std::string val, bool error) {
-  this->line = line;
-  this->type = t;
-  this->text = val;
-  this->error = error;
-}
