@@ -50,7 +50,7 @@ void Parser::nextToken() {
         current_token = tokens[token_index];
         line_count = current_token.line;
     } else {
-        current_token = Token(line_count, "", EOF_TOKEN, false);
+      current_token = Token(line_count, EOF_TOKEN, "", false);
     }
 }
 

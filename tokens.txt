@@ -1,354 +1,48 @@
 Line    | Lexeme         | Token Type
 --------------------------------------------------
 1       | /@             | COMMENT_START
-1       |  Sample code for Project 3 to test all required grammar rules | COMMENT_CONTENT
+1       |  This is main function | COMMENT_CONTENT
 1       | @/             | COMMENT_END
-3       | //             | SINGLE_LINE_COMMENT_START
-3       |  Rule 40, 41: include_command → include ( F_name.txt );| SINGLE_LINE_COMMENT_CONTENT
-4       | include        | INVALID_INCLUSION (Error)
+2       | NOReturn       | VOID
+2       | decrease       | IDENTIFIER
+2       | (              | BRACE
+2       | )              | BRACE
+2       | {              | BRACE
+3       | int            | INTEGER
+3       | 3num           | INVALID_IDENTIFIER (Error)
+3       | =              | ASSIGNMENT_OP
+3       | 5              | INTEGER
+3       | ;              | SEMICOLON
+4       | RepeatWhen     | IDENTIFIER
 4       | (              | BRACE
-4       | utils          | IDENTIFIER
-4       | .              | UNKNOWN (Error)
-4       | txt            | IDENTIFIER
+4       | counter        | IDENTIFIER
+4       | <              | RELATIONAL_OP
+4       | num            | IDENTIFIER
 4       | )              | BRACE
-4       | ;              | SEMICOLON
-1       | /@             | COMMENT_START
-1       |  Content for includeTest.txt to test Project 3 grammar rules | COMMENT_CONTENT
-1       | @/             | COMMENT_END
-3       | //             | SINGLE_LINE_COMMENT_START
-3       |  Rule 39: comment → /@ STR @/| SINGLE_LINE_COMMENT_CONTENT
-4       | /@             | COMMENT_START
-4       |  Utility functions | COMMENT_CONTENT
-4       | @/             | COMMENT_END
-6       | //             | SINGLE_LINE_COMMENT_START
-6       |  Rule 39: comment → /^ STR| SINGLE_LINE_COMMENT_CONTENT
-7       | /^             | SINGLE_LINE_COMMENT_START
-7       |  Helper function definition| SINGLE_LINE_COMMENT_CONTENT
-9       | //             | SINGLE_LINE_COMMENT_START
-9       |  Rules 5, 6: var-declaration → type-specifier ID ;| SINGLE_LINE_COMMENT_CONTENT
-10      | Imw            | INTEGER
-10      | util_var       | IDENTIFIER
-10      | ;              | SEMICOLON
-10      | //             | SINGLE_LINE_COMMENT_START
-10      |  Global variable| SINGLE_LINE_COMMENT_CONTENT
-12      | //             | SINGLE_LINE_COMMENT_START
-12      |  Rule 7: fun-declaration → type-specifier ID ( params ) compound-stmt| SINGLE_LINE_COMMENT_CONTENT
-13      | Imw            | INTEGER
-13      | util_func      | IDENTIFIER
-13      | (              | BRACE
-13      | Imw            | INTEGER
-13      | input          | IDENTIFIER
-13      | )              | BRACE
-13      | {              | BRACE
-14      | //             | SINGLE_LINE_COMMENT_START
-14      |  Rule 13: local-declarations| SINGLE_LINE_COMMENT_CONTENT
-15      | Imw            | INTEGER
-15      | temp           | IDENTIFIER
-15      | ;              | SEMICOLON
-17      | //             | SINGLE_LINE_COMMENT_START
-17      |  Rule 20-27: expression with addop and relop| SINGLE_LINE_COMMENT_CONTENT
-18      | temp           | IDENTIFIER
-18      | =              | ASSIGNMENT_OP
-18      | input          | IDENTIFIER
-18      | +              | ADDOP
-18      | 5              | INTEGER
-18      | ;              | SEMICOLON
-20      | //             | SINGLE_LINE_COMMENT_START
-20      |  Rule 17: selection-stmt| SINGLE_LINE_COMMENT_CONTENT
-21      | IfTrue         | CONDITION
-21      | (              | BRACE
-21      | temp           | IDENTIFIER
-21      | >              | RELATIONAL_OP
-21      | 0              | INTEGER
-21      | )              | BRACE
-21      | {              | BRACE
-22      | temp           | IDENTIFIER
-22      | =              | ASSIGNMENT_OP
-22      | temp           | IDENTIFIER
-22      | -              | ADDOP
-22      | 1              | INTEGER
-22      | ;              | SEMICOLON
-23      | }              | BRACE
-25      | //             | SINGLE_LINE_COMMENT_START
-25      |  Rule 19: jump-stmt| SINGLE_LINE_COMMENT_CONTENT
-26      | Turnback       | RETURN
-26      | temp           | IDENTIFIER
-26      | ;              | SEMICOLON
-27      | }              | BRACE
-27      |                | EOF_TOKEN
-5       | include        | INCLUSION
-5       | "includeTest.txt"| STRING_LITERAL
+4       | {              | BRACE
+5       | reg3           | IDENTIFIER
+5       | =              | ASSIGNMENT_OP
+5       | reg3           | IDENTIFIER
+5       | -              | ADDOP
+5       | 1              | INTEGER
 5       | ;              | SEMICOLON
-5       | //             | SINGLE_LINE_COMMENT_START
-5       |  Testing include with includeTest.txt| SINGLE_LINE_COMMENT_CONTENT
-6       | //             | SINGLE_LINE_COMMENT_START
-6       |  Rule 39: comment → /^ STR| SINGLE_LINE_COMMENT_CONTENT
-7       | /^             | SINGLE_LINE_COMMENT_START
-7       |  Testing single-line comment| SINGLE_LINE_COMMENT_CONTENT
-9       | //             | SINGLE_LINE_COMMENT_START
-9       |  Rules 5, 6: var-declaration → type-specifier ID ; | type-specifier → Imw | SIMw | Chj | Series | IMwf | SIMwf | NOReturn| SINGLE_LINE_COMMENT_CONTENT
-10      | Imw            | INTEGER
-10      | global_var     | IDENTIFIER
-10      | ;              | SEMICOLON
-10      | //             | SINGLE_LINE_COMMENT_START
-10      |  Global variable declaration (allowed anywhere)| SINGLE_LINE_COMMENT_CONTENT
-11      | Series         | STRING
-11      | str_var        | IDENTIFIER
-11      | ;              | SEMICOLON
-13      | //             | SINGLE_LINE_COMMENT_START
-13      |  Rule 2, 3: declaration-list → declaration d_list | d_list → declaration d_list | ε| SINGLE_LINE_COMMENT_CONTENT
-14      | //             | SINGLE_LINE_COMMENT_START
-14      |  Rule 7, 8, 9, 10, 11: fun-declaration → type-specifier ID ( params ) compound-stmt | params → param-list | NOReturn | ε| SINGLE_LINE_COMMENT_CONTENT
-15      | //             | SINGLE_LINE_COMMENT_START
-15      |  Rule 12: compound-stmt → { local-declarations statement-list }| SINGLE_LINE_COMMENT_CONTENT
-16      | NOReturn       | VOID
-16      | main           | IDENTIFIER
-16      | (              | BRACE
-16      | )              | BRACE
-16      | {              | BRACE
-17      | //             | SINGLE_LINE_COMMENT_START
-17      |  Rule 13: local-declarations → local-declarations var-declaration | ε| SINGLE_LINE_COMMENT_CONTENT
-18      | Imw            | INTEGER
-18      | x              | IDENTIFIER
-18      | ;              | SEMICOLON
-18      | //             | SINGLE_LINE_COMMENT_START
-18      |  Local variable declaration| SINGLE_LINE_COMMENT_CONTENT
-19      | Imw            | INTEGER
-19      | y              | IDENTIFIER
-19      | ;              | SEMICOLON
-21      | //             | SINGLE_LINE_COMMENT_START
-21      |  Initialization allowed only inside functions| SINGLE_LINE_COMMENT_CONTENT
-22      | x              | IDENTIFIER
-22      | =              | ASSIGNMENT_OP
-22      | 5              | INTEGER
-22      | ;              | SEMICOLON
-22      | //             | SINGLE_LINE_COMMENT_START
-22      |  Valid initialization| SINGLE_LINE_COMMENT_CONTENT
-23      | y              | IDENTIFIER
-23      | =              | ASSIGNMENT_OP
-23      | x              | IDENTIFIER
-23      | +              | ADDOP
-23      | 10             | INTEGER
-23      | ;              | SEMICOLON
-25      | //             | SINGLE_LINE_COMMENT_START
-25      |  Rule 16: expression-stmt → expression ; | ;| SINGLE_LINE_COMMENT_CONTENT
-26      | ;              | SEMICOLON
-26      | //             | SINGLE_LINE_COMMENT_START
-26      |  Empty expression statement| SINGLE_LINE_COMMENT_CONTENT
-28      | //             | SINGLE_LINE_COMMENT_START
-28      |  Rule 17: selection-stmt → IfTrue ( expression ) statement | IfTrue ( expression ) statement Otherwise statement| SINGLE_LINE_COMMENT_CONTENT
-29      | IfTrue         | CONDITION
-29      | (              | BRACE
-29      | x              | IDENTIFIER
-29      | >              | RELATIONAL_OP
-29      | 0              | INTEGER
-29      | )              | BRACE
-29      | {              | BRACE
-30      | x              | IDENTIFIER
-30      | =              | ASSIGNMENT_OP
-30      | x              | IDENTIFIER
-30      | +              | ADDOP
-30      | 1              | INTEGER
-30      | ;              | SEMICOLON
-31      | }              | BRACE
-31      | Otherwise      | CONDITION
-31      | {              | BRACE
-32      | x              | IDENTIFIER
-32      | =              | ASSIGNMENT_OP
-32      | 0              | INTEGER
-32      | ;              | SEMICOLON
-33      | }              | BRACE
-35      | //             | SINGLE_LINE_COMMENT_START
-35      |  Rule 18: iteration-stmt → RepeatWhen ( expression ) statement| SINGLE_LINE_COMMENT_CONTENT
-36      | RepeatWhen     | IDENTIFIER
-36      | (              | BRACE
-36      | x              | IDENTIFIER
-36      | <              | RELATIONAL_OP
-36      | 10             | INTEGER
-36      | )              | BRACE
-36      | {              | BRACE
-37      | x              | IDENTIFIER
-37      | =              | ASSIGNMENT_OP
-37      | x              | IDENTIFIER
-37      | +              | ADDOP
-37      | 1              | INTEGER
-37      | ;              | SEMICOLON
-38      | }              | BRACE
-40      | //             | SINGLE_LINE_COMMENT_START
-40      |  Rule 18: iteration-stmt → Reiterate ( expression ; expression ; expression ) statement| SINGLE_LINE_COMMENT_CONTENT
-41      | Reiterate      | LOOP
-41      | (              | BRACE
-41      | x              | IDENTIFIER
-41      | =              | ASSIGNMENT_OP
-41      | 0              | INTEGER
-41      | ;              | SEMICOLON
-41      | x              | IDENTIFIER
-41      | <              | RELATIONAL_OP
-41      | 5              | INTEGER
-41      | ;              | SEMICOLON
-41      | x              | IDENTIFIER
-41      | =              | ASSIGNMENT_OP
-41      | x              | IDENTIFIER
-41      | +              | ADDOP
-41      | 1              | INTEGER
-41      | )              | BRACE
-41      | {              | BRACE
-42      | y              | IDENTIFIER
-42      | =              | ASSIGNMENT_OP
-42      | y              | IDENTIFIER
-42      | +              | ADDOP
-42      | x              | IDENTIFIER
-42      | ;              | SEMICOLON
-43      | }              | BRACE
-45      | //             | SINGLE_LINE_COMMENT_START
-45      |  Rule 19: jump-stmt → Turnback expression ;| SINGLE_LINE_COMMENT_CONTENT
-46      | Turnback       | RETURN
-46      | x              | IDENTIFIER
-46      | ;              | SEMICOLON
-48      | //             | SINGLE_LINE_COMMENT_START
-48      |  Rule 19: jump-stmt → Stop ;| SINGLE_LINE_COMMENT_CONTENT
-49      | Stop           | BREAK
-49      | ;              | SEMICOLON
-50      | }              | BRACE
-52      | //             | SINGLE_LINE_COMMENT_START
-52      |  Rule 7: fun-declaration with params| SINGLE_LINE_COMMENT_CONTENT
-53      | Imw            | INTEGER
-53      | add            | IDENTIFIER
-53      | (              | BRACE
-53      | Imw            | INTEGER
-53      | a              | IDENTIFIER
-53      | ,              | COMMA
-53      | Imw            | INTEGER
-53      | b              | IDENTIFIER
-53      | )              | BRACE
-53      | {              | BRACE
-54      | //             | SINGLE_LINE_COMMENT_START
-54      |  Rule 20, 21, 22, 23, 24, 25, 26, 27: expression → id-assign = expression | simple-expression| SINGLE_LINE_COMMENT_CONTENT
-55      | //             | SINGLE_LINE_COMMENT_START
-55      |  simple-expression → additive-expression relop additive-expression | additive-expression| SINGLE_LINE_COMMENT_CONTENT
-56      | Imw            | INTEGER
-56      | result         | IDENTIFIER
-56      | ;              | SEMICOLON
-57      | result         | IDENTIFIER
-57      | =              | ASSIGNMENT_OP
-57      | a              | IDENTIFIER
-57      | +              | ADDOP
-57      | b              | IDENTIFIER
-57      | *              | MULOP
-57      | 2              | INTEGER
-57      | ;              | SEMICOLON
-57      | //             | SINGLE_LINE_COMMENT_START
-57      |  Testing addop, mulop, and expression| SINGLE_LINE_COMMENT_CONTENT
-58      | IfTrue         | CONDITION
-58      | (              | BRACE
-58      | result         | IDENTIFIER
-58      | !=             | RELATIONAL_OP
-58      | 0              | INTEGER
-58      | )              | BRACE
-58      | {              | BRACE
-59      | result         | IDENTIFIER
-59      | =              | ASSIGNMENT_OP
-59      | result         | IDENTIFIER
-59      | -              | ADDOP
-59      | 1              | INTEGER
-59      | ;              | SEMICOLON
-60      | }              | BRACE
-61      | Turnback       | RETURN
-61      | result         | IDENTIFIER
-61      | ;              | SEMICOLON
-62      | }              | BRACE
-64      | //             | SINGLE_LINE_COMMENT_START
-64      |  Rule 12: compound-stmt with comment| SINGLE_LINE_COMMENT_CONTENT
-65      | /@             | COMMENT_START
-65      |  Function with comment | COMMENT_CONTENT
-65      | @/             | COMMENT_END
-66      | SIMw           | SINTEGER
-66      | process        | IDENTIFIER
-66      | (              | BRACE
-66      | )              | BRACE
-66      | {              | BRACE
-67      | SIMw           | SINTEGER
-67      | p              | IDENTIFIER
-67      | ;              | SEMICOLON
-68      | p              | IDENTIFIER
-68      | =              | ASSIGNMENT_OP
-68      | 10             | INTEGER
-68      | ;              | SEMICOLON
-69      | }              | BRACE
-71      | //             | SINGLE_LINE_COMMENT_START
-71      |  Rule 5: struct declaration (Loli as STRUCT)| SINGLE_LINE_COMMENT_CONTENT
-72      | Loli           | STRUCT
-72      | Point          | IDENTIFIER
-72      | {              | BRACE
-73      | Imw            | INTEGER
-73      | x              | IDENTIFIER
-73      | ;              | SEMICOLON
-74      | Imw            | INTEGER
-74      | y              | IDENTIFIER
-74      | ;              | SEMICOLON
-75      | }              | BRACE
-75      | ;              | SEMICOLON
-77      | //             | SINGLE_LINE_COMMENT_START
-77      |  Rule 29: call → ID ( args ) | Rule 30, 31, 32: args → arg-list | ε | arg-list → expression a_list| SINGLE_LINE_COMMENT_CONTENT
-78      | Imw            | INTEGER
-78      | test_call      | IDENTIFIER
-78      | (              | BRACE
-78      | )              | BRACE
-78      | {              | BRACE
-79      | Imw            | INTEGER
-79      | res            | IDENTIFIER
-79      | ;              | SEMICOLON
-80      | res            | IDENTIFIER
-80      | =              | ASSIGNMENT_OP
-80      | add            | IDENTIFIER
-80      | (              | BRACE
-80      | 5              | INTEGER
-80      | ,              | COMMA
-80      | 10             | INTEGER
-80      | )              | BRACE
-80      | ;              | SEMICOLON
-80      | //             | SINGLE_LINE_COMMENT_START
-80      |  Function call with arguments| SINGLE_LINE_COMMENT_CONTENT
-81      | Turnback       | RETURN
-81      | res            | IDENTIFIER
-81      | ;              | SEMICOLON
-82      | }              | BRACE
-84      | //             | SINGLE_LINE_COMMENT_START
-84      |  Rule 33-38: num → Signed num | Unsigned num | value → INT_NUM | FLOAT_NUM| SINGLE_LINE_COMMENT_CONTENT
-85      | Imw            | INTEGER
-85      | test_numbers   | IDENTIFIER
-85      | (              | BRACE
-85      | )              | BRACE
-85      | {              | BRACE
-86      | Imw            | INTEGER
-86      | n1             | IDENTIFIER
-86      | ;              | SEMICOLON
-87      | IMwf           | FLOAT
-87      | n2             | IDENTIFIER
-87      | ;              | SEMICOLON
-88      | n1             | IDENTIFIER
-88      | =              | ASSIGNMENT_OP
-88      | +10            | INTEGER
-88      | ;              | SEMICOLON
-88      | //             | SINGLE_LINE_COMMENT_START
-88      |  Signed positive number| SINGLE_LINE_COMMENT_CONTENT
-89      | n2             | IDENTIFIER
-89      | =              | ASSIGNMENT_OP
-89      | -3.14          | FLOAT
-89      | ;              | SEMICOLON
-89      | //             | SINGLE_LINE_COMMENT_START
-89      |  Signed negative float| SINGLE_LINE_COMMENT_CONTENT
-90      | Turnback       | RETURN
-90      | n1             | IDENTIFIER
-90      | ;              | SEMICOLON
-91      | }              | BRACE
-91      |                | EOF_TOKEN
+6       | }              | BRACE
+7       | }              | BRACE
+7       |                | EOF_TOKEN
 
-Total Number of lexical errors: 2
+Total Number of lexical errors: 1
 
 Parser Results:
 --------------------------------------------------
 Line : 1 Matched Rule used: Comment
-Line : 3 Matched Rule used: Comment
-Line : 4 Not Matched Error: Unexpected token 'include'
-Total NO of errors: 1
+Line : 3 Not Matched Error: Unexpected token 'int'
+Line : 4 Not Matched Error: Unexpected token 'RepeatWhen'
+Line : 4 Not Matched Error: Unexpected token '<'
+Line : 4 Not Matched Error: Unexpected token '{'
+Line : 4 Matched Rule used: expression-stmt
+Line : 5 Not Matched Error: Unexpected token '1'
+Line : 6 Not Matched Error: Unexpected token '}'
+Line : 5 Matched Rule used: expression-stmt
+Line : 4 Matched Rule used: compound-stmt
+Line : 2 Matched Rule used: fun-declaration
+Total NO of errors: 6
