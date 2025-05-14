@@ -8,8 +8,8 @@ Line    | Lexeme         | Token Type
 2       | (              | BRACE
 2       | )              | BRACE
 2       | {              | BRACE
-3       | int            | INTEGER
-3       | 3num           | INVALID_IDENTIFIER (Error)
+3       | Imw            | INTEGER
+3       | num            | IDENTIFIER
 3       | =              | ASSIGNMENT_OP
 3       | 5              | INTEGER
 3       | ;              | SEMICOLON
@@ -30,12 +30,12 @@ Line    | Lexeme         | Token Type
 7       | }              | BRACE
 7       |                | EOF_TOKEN
 
-Total Number of lexical errors: 1
+Total Number of lexical errors: 0
 
 Parser Results:
 --------------------------------------------------
 Line : 1 Matched Rule used: Comment
-Line : 3 Not Matched Error: Unexpected token 'int'
+Line : 3 Not Matched Error: Unexpected token '5'
 Line : 4 Not Matched Error: Unexpected token 'RepeatWhen'
 Line : 4 Not Matched Error: Unexpected token '<'
 Line : 4 Not Matched Error: Unexpected token '{'
