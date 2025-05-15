@@ -261,7 +261,10 @@ void Parser::parsePList(std::ofstream &out) {
 
 void Parser::parseParam(std::ofstream &out) {
   if (isDataType(current_token.type)) {
-    nextToken();
+    if (current_token.type == STRUCT) {
+      nextToken();
+    }
+      nextToken();
     if (current_token.type == IDENTIFIER) {
       parseIdAssign(out);
     } else {
