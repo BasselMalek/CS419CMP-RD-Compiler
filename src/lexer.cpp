@@ -45,55 +45,21 @@ vector<Token> Lexer::tokenize() {
         skipWhitespace();
         if (peek() == '"') {
           Token fileToken = lexString();
-          string includedFile = fileToken.text;
-          if (includedFile.size() >= 2) {
-            includedFile = includedFile.substr(1, includedFile.size() - 2);
-          }
+          string includedFile = fileToken.text.substr(3, fileToken.text.size() - 4);
 
-          if (includedFiles.find(includedFile) != includedFiles.end()) {
-            Token errorToken;
-            errorToken.line = line;
-            errorToken.text = includedFile;
-            errorToken.type = TokenType::INVALID_INCLUSION;
-            errorToken.error = true;
-            tokens.push_back(errorToken);
-            continue;
-          }
+          string includedCode = readFile(includedFile);
+          Lexer includedLexer(includedCode);
+          vector<Token> includedTokens = includedLexer.tokenize();
+          includedTokens.pop_back();
+          tokens.insert(tokens.begin(), includedTokens.begin(),
+                        includedTokens.end());
 
-          std::ifstream fileCheck(includedFile);
-          if (!fileCheck.is_open()) {
-            Token errorToken;
-            errorToken.line = line;
-            errorToken.text = includedFile;
-            errorToken.type = TokenType::INVALID_INCLUSION;
-            errorToken.error = true;
-            tokens.push_back(keywordToken);
-            tokens.push_back(errorToken);
-            continue;
-          }
-          fileCheck.close();
-
-          string includedCode = readFile(includedFile); // Line 86
-          if (includedCode.empty()) {
-            Token errorToken;
-            errorToken.line = line;
-            errorToken.text = includedFile;
-            errorToken.type = TokenType::INVALID_INCLUSION;
-            errorToken.error = true;
-            tokens.push_back(keywordToken);
-            tokens.push_back(errorToken);
-          } else {
-            includedFiles.insert(includedFile);
-            Lexer includedLexer(includedCode);
-            vector<Token> includedTokens = includedLexer.tokenize();
-            tokens.insert(tokens.end(), includedTokens.begin(),
-                          includedTokens.end());
-            tokens.push_back(keywordToken);
-            tokens.push_back(fileToken);
-          }
+          // Optional: log the include itself
+          tokens.push_back(keywordToken);
+          tokens.push_back(fileToken);
         } else {
           keywordToken.error = true;
-          keywordToken.type = TokenType::INVALID_INCLUSION;
+          keywordToken.type = INVALID_INCLUSION;
           tokens.push_back(keywordToken);
         }
       } else {

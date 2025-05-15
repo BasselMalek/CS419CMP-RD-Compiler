@@ -101,6 +101,7 @@ void Parser::parseDeclarationList(std::ofstream &out) {
 void Parser::parseDeclaration(std::ofstream &out) {
   int start_line = current_token.line;
   if (isDataType(current_token.type)) {
+    bool isStruct = (current_token.type == STRUCT);
     parseTypeSpecifier(out);
     if (current_token.type == IDENTIFIER) {
       parseIdAssign(out);
@@ -119,7 +120,7 @@ void Parser::parseDeclaration(std::ofstream &out) {
         out << "Line : " << start_line
             << " Matched Rule used: struct-declaration" << std::endl;
       } else {
-        parseVarDec(out);
+        parseVarDec(out, isStruct);
         std::cout << "Line : " << start_line
                   << " Matched Rule used: var-declaration" << std::endl;
         out << "Line : " << start_line << " Matched Rule used: var-declaration"
@@ -152,8 +153,12 @@ void Parser::parseStructDec(std::ofstream &out) {
   }
 }
 
-void Parser::parseVarDec(std::ofstream &out) {
+void Parser::parseVarDec(std::ofstream &out, bool isStruct) {
   if (current_token.type == IDENTIFIER) {
+      // so i either look back at the type which breaks the rule of top->down and left->right, or i pass in a boo.
+    if (isStruct) {
+      parseIdAssign(out);
+    }
     parseIdAssign(out);
     if (current_token.type == ASSIGNMENT_OP) {
       if (!in_function_scope) {
@@ -166,9 +171,6 @@ void Parser::parseVarDec(std::ofstream &out) {
                "inside function"
             << std::endl;
         throwError(out);
-        // error_count++;
-        // nextToken();
-        // parseExpression(out);
       } else {
         nextToken();
         parseExpression(out);
@@ -273,6 +275,10 @@ void Parser::parseParam(std::ofstream &out) {
 void Parser::parseCompoundStmt(std::ofstream &out) {
   if (current_token.type == BRACE && current_token.text == "{") {
     nextToken();
+    if (current_token.type == COMMENT_START ||
+        current_token.type == SINGLE_LINE_COMMENT_START) {
+      parseComment(out);
+    }
     parseLocalDecs(out);
     parseStmtList(out);
     if (current_token.type == BRACE && current_token.text == "}") {
@@ -287,8 +293,9 @@ void Parser::parseCompoundStmt(std::ofstream &out) {
 
 void Parser::parseLocalDecs(std::ofstream &out) {
   while (isDataType(current_token.type)) {
-    nextToken();
-    parseVarDec(out);
+    bool isStruct = current_token.type == STRUCT;
+    parseTypeSpecifier(out);
+    parseVarDec(out, isStruct);
   }
 }
 
@@ -395,11 +402,20 @@ void Parser::parseSelectionStmt(std::ofstream &out) {
 
 void Parser::parseIterationStmt(std::ofstream &out) {
   if (current_token.type == LOOP) {
-    nextToken();
     if (current_token.text == "Reiterate") {
+      nextToken();
       if (current_token.type == BRACE && current_token.text == "(") {
         nextToken();
+        // so in the rules its reiterate (exp;exp;exp) but if it's supposed to be a for loop then the first one is either an expression or vardec. i dunno man.
+        if (isDataType(current_token.type)) {
+          parseTypeSpecifier(out);
+          // vardec consumes the ; from the line while expression does not because it's always wrapped with expression statement.
+          parseVarDec(out, false);
+          token_index -= 2;
+          nextToken();
+        } else {
         parseExpression(out);
+        }
         if (current_token.type == SEMICOLON) {
           nextToken();
           parseExpression(out);
@@ -422,6 +438,7 @@ void Parser::parseIterationStmt(std::ofstream &out) {
         throwError(out);
       }
     } else {
+      nextToken();
       if (current_token.type == BRACE && current_token.text == "(") {
         nextToken();
         parseExpression(out);
@@ -465,14 +482,15 @@ void Parser::parseJumpStmt(std::ofstream &out) {
 
 void Parser::parseExpression(std::ofstream &out) {
   if (current_token.type == IDENTIFIER) {
-      // I'm not sure we can edit the grammar beyond accounting for left recursion so i'll use backtracking here even though i've been avoiding it.
+    // I'm not sure we can edit the grammar beyond accounting for left recursion
+    // so i'll use backtracking here even though i've been avoiding it.
     int id_token = token_index;
     parseIdAssign(out);
     if (current_token.type == ASSIGNMENT_OP) {
       nextToken();
       parseExpression(out);
     } else {
-      token_index = id_token-1;
+      token_index = id_token - 1;
       nextToken();
       parseSimpleExpression(out);
     }
@@ -493,6 +511,24 @@ void Parser::parseIdAssign(std::ofstream &out) {
       throwError(out);
     } else {
       nextToken();
+      if (current_token.type == ACCESS_OP) {
+        nextToken();
+        parseIdAssign(out);
+      } else if (current_token.type == BRACE && current_token.text == "[") {
+        nextToken();
+        if (current_token.type == IDENTIFIER) {
+          parseIdAssign(out);
+        } else if (current_token.type == CONSTANT) {
+          nextToken();
+        } else {
+          throwError(out);
+        }
+        if (current_token.type != BRACE || current_token.text != "]") {
+          throwError(out);
+        } else {
+          nextToken();
+        }
+      }
     }
   } else {
     throwError(out);

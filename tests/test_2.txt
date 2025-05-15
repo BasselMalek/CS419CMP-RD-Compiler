@@ -3,8 +3,8 @@
    This file demonstrates basic language features 
 @/
 
-/^ Include helper functions
-include "toinclude";
+/^ Include helper functions 
+include".\tests\toinclude.txt";
 
 /^ Type declarations and variable declarations
 Imw globalVar;
@@ -25,35 +25,24 @@ Loli Person {
 Imw add(Imw a, Imw b) {
     Turnback a + b;
 }
-
-/^ Function without return value
-NOReturn printMessage(Series msg) {
-    /^ This function doesn't return anything
-    /^ Print operation would be handled by the runtime
-}
-
 /^ Main function with various statements
 Imw main() {
     /^ Variable declarations
-    Imw x, y, z;
+    Imw x;
     IMwf result;
     Series greeting;
     Loli Person person1;
-    
-    /^ Assignment operations
-    x = 10;
-    y = 20;
-    z = add(x, y);
-    
-    /^ Conditional statement
+    Imw y = 20;
+    Imw z = add(x, y);
+	Imw counter;
+	Imw I;
+	
+    x = 10;	
     IfTrue (z > 25) {
         result = z * 1.5;
     } Otherwise {
         result = z / 2.0;
     }
-    
-    /^ Loop statement
-    Imw counter;
     counter = 0;
     RepeatWhen (counter < 5) {
         counter = counter + 1;
@@ -63,19 +52,15 @@ Imw main() {
         }
     }
     
-    /^ Another loop style
     Reiterate (Imw i = 0; i < 10; i = i + 1) {
-        IfTrue (i % 2 == 0) {
-            /^ Skip even numbers
-            RepeatWhen;
+        IfTrue (greeting[i] - 2 == 0) {
+			Imw t;
         }
     }
     
-    /^ Structure access
-    person1.age = 25;
+    person1->age = 25;
     person1->name = "John Doe";
     person1->height = 175.5;
     
-    /^ Return statement
     Turnback 0;
 }

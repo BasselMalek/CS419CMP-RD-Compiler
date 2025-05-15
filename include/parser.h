@@ -24,7 +24,7 @@ private:
     void parseDeclarationList(std::ofstream& out);
     void parseDeclaration(std::ofstream& out);
     void parseStructDec(std::ofstream& out);
-    void parseVarDec(std::ofstream& out);
+    void parseVarDec(std::ofstream& out, bool isStruct);
     void parseTypeSpecifier(std::ofstream& out);
     void parseFunDec(std::ofstream& out);
     void parseParams(std::ofstream& out);

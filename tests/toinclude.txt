@@ -1,14 +1,5 @@
 /^ Utility functions
 
-/^ Calculate absolute value of an integer
-Imw abs(SIMw num) {
-    IfTrue (num < 0) {
-        Turnback -num;
-    } Otherwise {
-        Turnback num;
-    }
-}
-
 /^ Calculate maximum of two values
 Imw max(Imw a, Imw b) {
     IfTrue (a > b) {
@@ -29,10 +20,10 @@ Imw min(Imw a, Imw b) {
 
 /^ Check if number is even
 Imw isEven(Imw num) {
-    IfTrue (num % 2 == 0) {
-        Turnback 1;  /^ True
+    IfTrue (num + 2 == 0) {
+        Turnback 1;
     } Otherwise {
-        Turnback 0;  /^ False
+        Turnback 0;
     }
 }
 
@@ -47,8 +38,8 @@ Imw factorial(Imw n) {
 
 /^ String copy function
 NOReturn stringCopy(Series dest, Series src) {
-    /^ This would need builtin string handling
-    /^ Implementation would depend on the runtime
+    /@ This would need builtin string handling
+    Implementation would depend on the runtime @/
 }
 
 /^ Utility structure for mathematical operations
@@ -58,7 +49,7 @@ Loli MathUtils {
 };
 
 /^ Initialize math constants
-NOReturn initMathUtils(Loli MathUtils* utils) {
+NOReturn initMathUtils(Loli utils) {
     utils->pi = 3.14159;
     utils->e = 2.71828;
 }
