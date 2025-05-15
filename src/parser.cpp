@@ -1,8 +1,10 @@
 #include "parser.h"
+#include <algorithm>
 #include <iostream>
 
 Parser::Parser()
-    : token_index(0), line_count(1), error_count(0), in_function_scope(false) {}
+    : token_index(0), line_count(1), slow_count(1), error_count(0),
+      in_function_scope(false) {}
 
 void Parser::setTokens(const std::vector<Token> &input_tokens) {
   tokens = input_tokens;
@@ -12,23 +14,45 @@ void Parser::setTokens(const std::vector<Token> &input_tokens) {
   }
 }
 
+int Parser::getNum(const std::string &s) {
+  size_t pos = s.find("Line:");
+  if (pos == std::string::npos)
+    pos += 5;
+  while (pos < s.size() && std::isspace(s[pos]))
+    ++pos;
+  int n = 0;
+  while (pos < s.size() && std::isdigit(s[pos])) {
+    n = n * 10 + (s[pos] - '0');
+    ++pos;
+  }
+  return n;
+}
+
+void Parser::printParserOutput(std::ofstream &out) {
+  std::sort(this->output_lines.begin(), this->output_lines.end(),
+            [&](const std::string &a, const std::string &b) {
+              return getNum(a) < getNum(b);
+            });
+  for (auto &&i : this->output_lines) {
+    std::cout << i << std::endl;
+    out << i << std::endl;
+  }
+}
+
 int Parser::parse(std::ofstream &out) {
   if (tokens.empty()) {
-    std::cout << "Error: No tokens to parse." << std::endl;
-    out << "Error: No tokens to parse." << std::endl;
+    output_lines.push_back("No tokens to parse!");
+
     return 1;
   }
-  cout << "\nParser Results:\n";
-  cout << string(50, '-') << "\n";
-  out << "\nParser Results:\n";
-  out << string(50, '-') << "\n";
+  output_lines.push_back("\nParser Results:\n");
+  output_lines.push_back(std::string(50, '-'));
 
   parseDeclarations(out);
   if (current_token.type != EOF_TOKEN) {
     throwError(out);
   }
-  std::cout << "Total NO of errors: " << error_count << std::endl;
-  out << "Total NO of errors: " << error_count << std::endl;
+  output_lines.push_back("Total NO of errors: " + std::to_string(error_count));
   return error_count == 0 ? 0 : 1;
 }
 
@@ -52,6 +76,14 @@ bool Parser::isStartsOfLine(TokenType token) { return token == INCLUSION; }
 
 void Parser::nextToken() {
   if (token_index + 1 < tokens.size()) {
+    slow_count +=
+        (this->current_token.type == SEMICOLON ||
+         this->current_token.type == COMMENT_END ||
+         this->current_token.type == SINGLE_LINE_COMMENT_CONTENT ||
+         (this->current_token.type == BRACE &&
+          (this->current_token.text == "{" || this->current_token.text == "}")))
+            ? 1
+            : 0;
     token_index++;
     current_token = tokens[token_index];
     line_count = current_token.line;
@@ -62,12 +94,9 @@ void Parser::nextToken() {
 
 void Parser::throwError(std::ofstream &out) {
   error_count++;
-  std::cout << "Line : " << current_token.line
-            << " Not Matched Error: Unexpected token '" << current_token.text
-            << "'" << std::endl;
-  out << "Line : " << current_token.line
-      << " Not Matched Error: Unexpected token '" << current_token.text << "'"
-      << std::endl;
+  output_lines.push_back("Line : " + std::to_string(slow_count) +
+                         " Not Matched Error: Unexpected token '" +
+                         current_token.text + "'");
   while (current_token.type != SEMICOLON && current_token.type != BRACE &&
          current_token.type != EOF_TOKEN && token_index < tokens.size()) {
     nextToken();
@@ -106,25 +135,19 @@ void Parser::parseDeclaration(std::ofstream &out) {
     if (current_token.type == IDENTIFIER) {
       parseIdAssign(out);
       if (current_token.type == BRACE && current_token.text == "(") {
+        output_lines.push_back("Line : " + std::to_string(slow_count) +
+                               " Matched Rule used: Function-declaration");
         in_function_scope = true;
         parseFunDec(out);
         in_function_scope = false;
-        std::cout << "Line : " << start_line
-                  << " Matched Rule used: fun-declaration" << std::endl;
-        out << "Line : " << start_line << " Matched Rule used: fun-declaration"
-            << std::endl;
       } else if (current_token.type == BRACE && current_token.text == "{") {
+        output_lines.push_back("Line : " + std::to_string(slow_count) +
+                               " Matched Rule used: Struct-declaration");
         parseStructDec(out);
-        std::cout << "Line : " << start_line
-                  << " Matched Rule used: struct-declaration" << std::endl;
-        out << "Line : " << start_line
-            << " Matched Rule used: struct-declaration" << std::endl;
       } else {
+        output_lines.push_back("Line : " + std::to_string(slow_count) +
+                               " Matched Rule used: Variable-declaration");
         parseVarDec(out, isStruct);
-        std::cout << "Line : " << start_line
-                  << " Matched Rule used: var-declaration" << std::endl;
-        out << "Line : " << start_line << " Matched Rule used: var-declaration"
-            << std::endl;
       }
     } else {
       throwError(out);
@@ -155,21 +178,17 @@ void Parser::parseStructDec(std::ofstream &out) {
 
 void Parser::parseVarDec(std::ofstream &out, bool isStruct) {
   if (current_token.type == IDENTIFIER) {
-      // so i either look back at the type which breaks the rule of top->down and left->right, or i pass in a boo.
+    // so i either look back at the type which breaks the rule of top->down and
+    // left->right, or i pass in a boo.
     if (isStruct) {
       parseIdAssign(out);
     }
     parseIdAssign(out);
     if (current_token.type == ASSIGNMENT_OP) {
       if (!in_function_scope) {
-        std::cout << "Line : " << current_token.line
-                  << " Not Matched Error: Variable initialization only allowed "
-                     "inside function"
-                  << std::endl;
-        out << "Line : " << current_token.line
-            << " Not Matched Error: Variable initialization only allowed "
-               "inside function"
-            << std::endl;
+        output_lines.push_back("Line : " + std::to_string(slow_count) +
+                               "ERROR: Variable initialization only allowed "
+                               "inside function");
         throwError(out);
       } else {
         nextToken();
@@ -264,7 +283,7 @@ void Parser::parseParam(std::ofstream &out) {
     if (current_token.type == STRUCT) {
       nextToken();
     }
-      nextToken();
+    nextToken();
     if (current_token.type == IDENTIFIER) {
       parseIdAssign(out);
     } else {
@@ -315,50 +334,43 @@ void Parser::parseStatement(std::ofstream &out) {
   case CONSTANT:
   case STRING_LITERAL:
   case CHARACTER_LITERAL:
+    output_lines.push_back("Line : " + std::to_string(slow_count) +
+                           " Matched Rule used: Expression-statement");
     parseExpressionStmt(out);
-    std::cout << "Line : " << start_line
-              << " Matched Rule used: expression-stmt" << std::endl;
-    out << "Line : " << start_line << " Matched Rule used: expression-stmt"
-        << std::endl;
     break;
   case BRACE:
     if (current_token.text == "(") {
+      output_lines.push_back("Line : " + std::to_string(slow_count) +
+                             " Matched Rule used: Expression-statement");
       parseExpressionStmt(out);
-      std::cout << "Line : " << start_line
-                << " Matched Rule used: expression-stmt" << std::endl;
-      out << "Line : " << start_line << " Matched Rule used: expression-stmt"
-          << std::endl;
+
     } else if (current_token.text == "{") {
+      output_lines.push_back("Line : " + std::to_string(slow_count) +
+                             " Matched Rule used: Compound-statement");
       parseCompoundStmt(out);
-      std::cout << "Line : " << start_line
-                << " Matched Rule used: compound-stmt" << std::endl;
-      out << "Line : " << start_line << " Matched Rule used: compound-stmt"
-          << std::endl;
+
     } else {
       throwError(out);
     }
     break;
   case CONDITION:
+    output_lines.push_back("Line : " + std::to_string(slow_count) +
+                           " Matched Rule used: Selection-statement");
     parseSelectionStmt(out);
-    std::cout << "Line : " << start_line << " Matched Rule used: selection-stmt"
-              << std::endl;
-    out << "Line : " << start_line << " Matched Rule used: selection-stmt"
-        << std::endl;
+
     break;
   case LOOP:
+    output_lines.push_back("Line : " + std::to_string(slow_count) +
+                           " Matched Rule used: Iteration-statement");
     parseIterationStmt(out);
-    std::cout << "Line : " << start_line << " Matched Rule used: iteration-stmt"
-              << std::endl;
-    out << "Line : " << start_line << " Matched Rule used: iteration-stmt"
-        << std::endl;
+
     break;
   case RETURN:
   case BREAK:
+    output_lines.push_back("Line : " + std::to_string(slow_count) +
+                           " Matched Rule used: Jump-statement");
     parseJumpStmt(out);
-    std::cout << "Line : " << start_line << " Matched Rule used: jump-stmt"
-              << std::endl;
-    out << "Line : " << start_line << " Matched Rule used: jump-stmt"
-        << std::endl;
+
     break;
   default:
     throwError(out);
@@ -409,15 +421,18 @@ void Parser::parseIterationStmt(std::ofstream &out) {
       nextToken();
       if (current_token.type == BRACE && current_token.text == "(") {
         nextToken();
-        // so in the rules its reiterate (exp;exp;exp) but if it's supposed to be a for loop then the first one is either an expression or vardec. i dunno man.
+        // so in the rules its reiterate (exp;exp;exp) but if it's supposed to
+        // be a for loop then the first one is either an expression or vardec. i
+        // dunno man.
         if (isDataType(current_token.type)) {
           parseTypeSpecifier(out);
-          // vardec consumes the ; from the line while expression does not because it's always wrapped with expression statement.
+          // vardec consumes the ; from the line while expression does not
+          // because it's always wrapped with expression statement.
           parseVarDec(out, false);
           token_index -= 2;
           nextToken();
         } else {
-        parseExpression(out);
+          parseExpression(out);
         }
         if (current_token.type == SEMICOLON) {
           nextToken();
@@ -505,12 +520,10 @@ void Parser::parseExpression(std::ofstream &out) {
 void Parser::parseIdAssign(std::ofstream &out) {
   if (current_token.type == IDENTIFIER) {
     if (!std::isalpha(current_token.text[0]) && current_token.text[0] != '_') {
-      std::cout << "Line : " << current_token.line
-                << " Not Matched Error: Invalid identifier \""
-                << current_token.text << "\"" << std::endl;
-      out << "Line : " << current_token.line
-          << " Not Matched Error: Invalid identifier \"" << current_token.text
-          << "\"" << std::endl;
+      output_lines.push_back("Line : " + std::to_string(current_token.line) +
+                             " Not Matched Error: Invalid identifier \"" +
+                             current_token.text + "\"");
+
       throwError(out);
     } else {
       nextToken();
@@ -744,12 +757,11 @@ void Parser::parseComment(std::ofstream &out) {
     if (current_token.type == SINGLE_LINE_COMMENT_CONTENT) {
       nextToken();
     }
+  output_lines.push_back("Line : " + std::to_string(slow_count) +
+                         " Matched Rule used: Comment");
   } else {
     throwError(out);
   }
-  std::cout << "Line : " << start_line << " Matched Rule used: Comment"
-            << std::endl;
-  out << "Line : " << start_line << " Matched Rule used: Comment" << std::endl;
 }
 
 void Parser::parseIncludeCommand(std::ofstream &out) {
@@ -760,11 +772,9 @@ void Parser::parseIncludeCommand(std::ofstream &out) {
         current_token.type == INVALID_INCLUSION) {
       parseFName(out);
       if (current_token.type == SEMICOLON) {
+        output_lines.push_back("Line : " + std::to_string(slow_count) +
+                               " Matched Rule used: Include-command");
         nextToken();
-        std::cout << "Line : " << start_line
-                  << " Matched Rule used: include_command" << std::endl;
-        out << "Line : " << start_line << " Matched Rule used: include_command"
-            << std::endl;
       } else {
         throwError(out);
       }

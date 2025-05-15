@@ -49,6 +49,7 @@ bool Compiler::compile() {
   this->printLexerTokens();
   this->parser.setTokens(this->tokens);
   this->parser.parse(this->out);
+  this->parser.printParserOutput(this->out);
   this->out.close();
   return (this->parser.getErrorCount() == 0 &&
           this->calcLexerErrorCount() == 0);

@@ -11,8 +11,10 @@ private:
     Token current_token;
     unsigned int token_index;
     unsigned int line_count;
+    unsigned int slow_count;
     unsigned int error_count;
     bool in_function_scope;
+    std::vector<string> output_lines;
 
     bool isDataType(TokenType token);
     bool isStartOfStatement(TokenType type);
@@ -67,10 +69,12 @@ private:
     void parseComment(std::ofstream& out);
     void parseIncludeCommand(std::ofstream& out);
     void parseFName(std::ofstream& out);
+  int getNum(const std::string &s);
 
 public:
     Parser();
-    void setTokens(const std::vector<Token> &input_tokens);
+  void setTokens(const std::vector<Token> &input_tokens);
+    void printParserOutput(std::ofstream &out);
     int parse(std::ofstream& out);
     unsigned int getErrorCount() const;
 };
